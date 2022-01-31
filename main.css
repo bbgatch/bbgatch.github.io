@@ -2,6 +2,10 @@ html {
     font-family: 'JetBrains Mono', Arial, Helvetica, sans-serif;
 }
 
+body {
+    font-size: 100%;
+}
+
 h1 {
     font-size: 3em;
 }
