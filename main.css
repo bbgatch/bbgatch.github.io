@@ -7,10 +7,17 @@ body {
 }
 
 h1 {
-    font-size: 3em;
+    font-size: 3.2em;
     font-weight: 800;
 }
 
 h2 {
     font-size: 2.1em;
+}
+
+/* For responsive image sizing. */
+.responsive {
+    /* Image can shrink smaller but won't go larger than existing width. */
+    max-width: 100%;
+    height: auto;
 }
