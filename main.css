@@ -4,7 +4,7 @@ html {
 
 body {
     font-size: 100%;
-    width: 1000px;
+    width: 100vw;
     margin: auto;
 }
 
@@ -41,9 +41,9 @@ footer {
     /* list-style-type: ">"; */
     display: inline;
     margin: 0;
-    padding-top: 8px;
+    padding-top: 10px;
     padding-right: 10px;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
     padding-left: 10px;
     background-color: #e8e8e0;
 }
