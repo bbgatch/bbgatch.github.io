@@ -15,6 +15,10 @@ h2 {
     font-size: 1.5em;
 }
 
+a {
+    color: darkolivegreen;
+}
+
 /* For responsive image sizing. */
 .responsive {
     /* Image can shrink smaller but won't go larger than existing width. */
