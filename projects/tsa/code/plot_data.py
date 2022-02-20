@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 
-def plot_trend():
+def plot_trend(width=10, height=5):
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
 
     # Plot data
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(width, height))
     plt.plot(df['Date'], df['Passengers'], color='darkslategray')
     plt.suptitle('U.S. TSA Checkpoint Passengers',
                  x=0.01,
@@ -38,12 +38,12 @@ def plot_trend():
                 )
 
     plt.savefig('tsa-full-trend.png')
-    plt.show()
+    # plt.show()
     print('Trend chart created.')
 
 
 
-def plot_trend_by_year():
+def plot_trend_by_year(width=10, height=5):
     # Get latest date
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -60,7 +60,7 @@ def plot_trend_by_year():
     cmap = cm.get_cmap('Blues')
     colors = [0.2, 0.4, 0.6, 0.95]
 
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(width, height))
     for i in range(num_years):
         plt.plot(df['Date'],
                 df[years[i]],
@@ -96,11 +96,11 @@ def plot_trend_by_year():
     plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
     
     plt.savefig('tsa-by-year.png')
-    plt.show()
+    # plt.show()
     print('Trend chart by year created.')
 
 
-def plot_percent_change_trend():
+def plot_percent_change_trend(width=10, height=5):
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
@@ -109,7 +109,7 @@ def plot_percent_change_trend():
     df['YoY_Pct_Chg'] = df['Passengers'].pct_change(periods=364)
 
     # Plot data
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(width, height))
     plt.plot(df['Date'], df['YoY_Pct_Chg'], color='darkgreen')
     plt.suptitle('U.S. TSA Checkpoint Passengers YoY % Chg',
                  x=0.01,
@@ -125,11 +125,11 @@ def plot_percent_change_trend():
     # plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
 
     plt.savefig('tsa-pct-change.png')
-    plt.show()
+    # plt.show()
     print('Percent change trend chart created.')
 
 
-def plot_percent_change_trend_by_year():
+def plot_percent_change_trend_by_year(width=10, height=5):
     # Get latest date
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -154,7 +154,7 @@ def plot_percent_change_trend_by_year():
     cmap = cm.get_cmap('Greens')
     colors = [0.3, 0.5, 0.95]
 
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(width, height))
     for i in range(num_years):
         plt.plot(df['Date'],
                 df[years[i]],
@@ -192,11 +192,11 @@ def plot_percent_change_trend_by_year():
     plt.gca().set_yticklabels(['{:.0%}'.format(x) for x in current_values])
     
     plt.savefig('tsa-pct-chg-by-year.png')
-    plt.show()
+    # plt.show()
     print('Percent change trend chart by year created.')
 
 
-def plot_percent_of_2019():
+def plot_percent_of_2019(width=10, height=5):
     # Get latest date
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -221,7 +221,7 @@ def plot_percent_of_2019():
     cmap = cm.get_cmap('Oranges')
     colors = [0.3, 0.5, 0.95]
 
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(width, height))
     for i in range(num_years):
         plt.plot(df['Date'],
                 df[years[i]],
@@ -263,6 +263,6 @@ def plot_percent_of_2019():
     plt.gca().set_yticklabels(['{:.0%}'.format(x) for x in current_values])
     
     plt.savefig('tsa-pct-of-2019.png')
-    plt.show()
-    print('Percent change trend chart by year created.')
+    # plt.show()
+    print('Percent of 2019 trend chart by year created.')
 

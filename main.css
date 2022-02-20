@@ -4,7 +4,7 @@ html {
 
 body {
     font-size: 100%;
-    width: 100vw;
+    max-width: 1000px;
     margin: auto;
 }
 
@@ -18,17 +18,23 @@ h2 {
 }
 
 a {
-    color: darkolivegreen;
+    color: #4d4d00;
 }
 
 footer {
     background-color: #e8e8e0;
-    padding-top: 15px;
+    padding-top: 8px;
     text-align: center;
-    position: fixed;
+    position: relative;
     bottom: 0;
     left: 0;
     width: 100%;
+}
+
+footer p {
+    margin: 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
 }
 
 .navbar {
@@ -38,7 +44,6 @@ footer {
 }
 
 .navbar li {
-    /* list-style-type: ">"; */
     display: inline;
     margin: 0;
     padding-top: 10px;
@@ -53,4 +58,8 @@ footer {
     /* Image can shrink smaller but won't go larger than existing width. */
     max-width: 100%;
     height: auto;
+    /* Center images */
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
