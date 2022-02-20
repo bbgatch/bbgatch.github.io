@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 
-def plot_trend(width=10, height=5):
+def plot_trend(width=10, height=6):
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
@@ -43,7 +43,7 @@ def plot_trend(width=10, height=5):
 
 
 
-def plot_trend_by_year(width=10, height=5):
+def plot_trend_by_year(width=10, height=6):
     # Get latest date
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -100,7 +100,7 @@ def plot_trend_by_year(width=10, height=5):
     print('Trend chart by year created.')
 
 
-def plot_percent_change_trend(width=10, height=5):
+def plot_percent_change_trend(width=10, height=6):
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
@@ -129,7 +129,7 @@ def plot_percent_change_trend(width=10, height=5):
     print('Percent change trend chart created.')
 
 
-def plot_percent_change_trend_by_year(width=10, height=5):
+def plot_percent_change_trend_by_year(width=10, height=6):
     # Get latest date
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -196,7 +196,7 @@ def plot_percent_change_trend_by_year(width=10, height=5):
     print('Percent change trend chart by year created.')
 
 
-def plot_percent_of_2019(width=10, height=5):
+def plot_percent_of_2019(width=10, height=6):
     # Get latest date
     df = pd.read_csv('tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
