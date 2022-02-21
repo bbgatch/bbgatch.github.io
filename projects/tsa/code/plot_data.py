@@ -4,7 +4,7 @@ from matplotlib import cm
 
 
 def plot_trend(width=10, height=6):
-    df = pd.read_csv('tsa.csv')
+    df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
 
@@ -37,7 +37,7 @@ def plot_trend(width=10, height=6):
                  horizontalalignment='center'
                 )
 
-    plt.savefig('tsa-full-trend.png')
+    plt.savefig('images/tsa-full-trend.png')
     # plt.show()
     print('Trend chart created.')
 
@@ -45,11 +45,11 @@ def plot_trend(width=10, height=6):
 
 def plot_trend_by_year(width=10, height=6):
     # Get latest date
-    df = pd.read_csv('tsa.csv')
+    df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
    
-    df = pd.read_csv('tsa-by-year.csv')
+    df = pd.read_csv('data/tsa-by-year.csv')
     df['Date'] = pd.to_datetime(df['Date'])
 
     # Get year labels from columns
@@ -95,13 +95,13 @@ def plot_trend_by_year(width=10, height=6):
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
     
-    plt.savefig('tsa-by-year.png')
+    plt.savefig('images/tsa-by-year.png')
     # plt.show()
     print('Trend chart by year created.')
 
 
 def plot_percent_change_trend(width=10, height=6):
-    df = pd.read_csv('tsa.csv')
+    df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
 
@@ -124,19 +124,19 @@ def plot_percent_change_trend(width=10, height=6):
     # current_values = plt.gca().get_yticks()
     # plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
 
-    plt.savefig('tsa-pct-change.png')
+    plt.savefig('images/tsa-pct-change.png')
     # plt.show()
     print('Percent change trend chart created.')
 
 
 def plot_percent_change_trend_by_year(width=10, height=6):
     # Get latest date
-    df = pd.read_csv('tsa.csv')
+    df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
     
     # Read in data by year
-    df = pd.read_csv('tsa-by-year.csv')
+    df = pd.read_csv('data/tsa-by-year.csv')
     df['Date'] = pd.to_datetime(df['Date'])
 
     # Calculate year-over-year percent change
@@ -191,19 +191,19 @@ def plot_percent_change_trend_by_year(width=10, height=6):
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:.0%}'.format(x) for x in current_values])
     
-    plt.savefig('tsa-pct-chg-by-year.png')
+    plt.savefig('images/tsa-pct-chg-by-year.png')
     # plt.show()
     print('Percent change trend chart by year created.')
 
 
 def plot_percent_of_2019(width=10, height=6):
     # Get latest date
-    df = pd.read_csv('tsa.csv')
+    df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
     
     # Read in data by year
-    df = pd.read_csv('tsa-by-year.csv')
+    df = pd.read_csv('data/tsa-by-year.csv')
     df['Date'] = pd.to_datetime(df['Date'])
 
     # Calculate percent of 2019 for each year
@@ -262,7 +262,7 @@ def plot_percent_of_2019(width=10, height=6):
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:.0%}'.format(x) for x in current_values])
     
-    plt.savefig('tsa-pct-of-2019.png')
+    plt.savefig('images/tsa-pct-of-2019.png')
     # plt.show()
     print('Percent of 2019 trend chart by year created.')
 

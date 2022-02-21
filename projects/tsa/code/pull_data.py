@@ -54,5 +54,5 @@ def pull_data():
     df = df.sort_values(by = 'Date')
 
     # Save data in original format
-    df.to_csv('tsa-orig.csv', index=False)
+    df.to_csv('data/tsa-orig.csv', index=False)
     print('Data pulled.')

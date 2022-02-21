@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import date, timedelta
 
 def tidy_data():
-    df = pd.read_csv('tsa-orig.csv')
+    df = pd.read_csv('data/tsa-orig.csv')
     df['Date'] = pd.to_datetime(df['Date'])
 
     # Data is not stored in tidy format. We need to separate the "this year" and 
@@ -54,12 +54,12 @@ def tidy_data():
     final = final.sort_values(by='Date')
 
     # Save history and current results
-    final.to_csv('history/tsa-' + str(date.today()) + '.csv', index=False)
-    final.to_csv('tsa.csv', index=False)
+    final.to_csv('data/history/tsa-' + str(date.today()) + '.csv', index=False)
+    final.to_csv('data/tsa.csv', index=False)
     print('Data tidied.')
 
 def widen_data_by_year():
-    df = pd.read_csv('tsa.csv')
+    df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     
     lag_1 = df.shift(periods=-364).rename(columns={'Passengers' : '2020',
@@ -78,4 +78,4 @@ def widen_data_by_year():
     df = df.drop(columns=['Date_2019', 'Date_2020', 'Date_2021', 'Date_2022'])
 
     df = df[['Date', '2019', '2020', '2021', '2022']]
-    df.to_csv('tsa-by-year.csv', index=False)
+    df.to_csv('data/tsa-by-year.csv', index=False)
