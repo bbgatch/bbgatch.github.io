@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 
-def plot_trend(width=10, height=6):
+def plot_trend(width=10, height=6, show_plot=False):
     df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
@@ -38,12 +38,13 @@ def plot_trend(width=10, height=6):
                 )
 
     plt.savefig('images/tsa-full-trend.png')
-    # plt.show()
+    if show_plot:
+        plt.show()
     print('Trend chart created.')
 
 
 
-def plot_trend_by_year(width=10, height=6):
+def plot_trend_by_year(width=10, height=6, show_plot=False):
     # Get latest date
     df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -96,11 +97,12 @@ def plot_trend_by_year(width=10, height=6):
     plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
     
     plt.savefig('images/tsa-by-year.png')
-    # plt.show()
+    if show_plot:
+        plt.show()
     print('Trend chart by year created.')
 
 
-def plot_percent_change_trend(width=10, height=6):
+def plot_percent_change_trend(width=10, height=6, show_plot=False):
     df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     latest_date = max(df['Date']).strftime('%Y-%m-%d')
@@ -125,11 +127,12 @@ def plot_percent_change_trend(width=10, height=6):
     # plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
 
     plt.savefig('images/tsa-pct-change.png')
-    # plt.show()
+    if show_plot:
+        plt.show()
     print('Percent change trend chart created.')
 
 
-def plot_percent_change_trend_by_year(width=10, height=6):
+def plot_percent_change_trend_by_year(width=10, height=6, show_plot=False):
     # Get latest date
     df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -192,11 +195,12 @@ def plot_percent_change_trend_by_year(width=10, height=6):
     plt.gca().set_yticklabels(['{:.0%}'.format(x) for x in current_values])
     
     plt.savefig('images/tsa-pct-chg-by-year.png')
-    # plt.show()
+    if show_plot:
+        plt.show()
     print('Percent change trend chart by year created.')
 
 
-def plot_percent_of_2019(width=10, height=6):
+def plot_percent_of_2019(width=10, height=6, show_plot=False):
     # Get latest date
     df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
@@ -263,6 +267,7 @@ def plot_percent_of_2019(width=10, height=6):
     plt.gca().set_yticklabels(['{:.0%}'.format(x) for x in current_values])
     
     plt.savefig('images/tsa-pct-of-2019.png')
-    # plt.show()
+    if show_plot:
+        plt.show()
     print('Percent of 2019 trend chart by year created.')
 
