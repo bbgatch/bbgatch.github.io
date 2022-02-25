@@ -137,7 +137,7 @@ def plot_percent_change_trend(width=10, height=6, show_plot=False):
 
 
 def plot_percent_change_trend_by_year(width=10, height=6, show_plot=False):
-    '''Plot percent chang etrend by year.'''
+    '''Plot percent change trend by year.'''
     # Get latest date
     df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
