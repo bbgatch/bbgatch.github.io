@@ -2,10 +2,12 @@ import code.pull_data as pull_data
 import code.tidy_data as tidy_data
 import code.plot_data as plot_data
 
+# Set size of plot output images
 width = 10
 height = 6
 show_plot = False
 
+# Pull updated TSA data and create plots
 pull_data.pull_data()
 tidy_data.tidy_data()
 tidy_data.widen_data_by_year()

@@ -5,6 +5,9 @@ import datetime as dt
 from datetime import date, timedelta
 
 def pull_data():
+    '''
+    Pull TSA checkpoint traveler data from https://www.tsa.gov/coronavirus/passenger-throughput
+    '''
     # Guided by:
     # https://towardsdatascience.com/web-scraping-html-tables-with-python-c9baba21059
 

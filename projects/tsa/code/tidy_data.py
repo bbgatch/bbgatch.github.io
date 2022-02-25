@@ -2,6 +2,9 @@ import pandas as pd
 from datetime import date, timedelta
 
 def tidy_data():
+    '''Convert data to tidy format. Move multiple year columns to single column 
+    of daily data from 2019 to present.
+    '''
     df = pd.read_csv('data/tsa-orig.csv')
     df['Date'] = pd.to_datetime(df['Date'])
 
@@ -59,9 +62,18 @@ def tidy_data():
     print('Data tidied.')
 
 def widen_data_by_year():
+    '''The data is originally separated into separate columns for each year.
+    Each day is presumably day-matched to the same day of the week in the prior
+    year. However the original format does not work perfectly for comparing
+    across years. We need to use the already tidied data to recreate separate 
+    day-matched prior year columns. This avoids the issue in the original data 
+    of crossing over from one year to the next. 
+    '''
+    # Use the tidied data to create day-matched prior year columns.
     df = pd.read_csv('data/tsa.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     
+    # Lagging 364 days back to get the matching day of week in the prior year.
     lag_1 = df.shift(periods=-364).rename(columns={'Passengers' : '2020',
                                                    'Date' : 'Date_2020'})
     lag_2 = df.shift(periods=-364 * 2).rename(columns={'Passengers' : '2021',
@@ -71,11 +83,14 @@ def widen_data_by_year():
     df = df.rename(columns={'Passengers' : '2019',
                             'Date' : 'Date_2019'})
 
+    # Combine original data and lagged data. Creating new 'Date' field with just
+    # new clean 2022 dates in order. Original data is not cleanly in order.
     df = pd.concat([df, lag_1, lag_2, lag_3], axis=1)
     df['Date'] = pd.date_range(start="2022-01-01", periods=len(df), freq='D')
     df = df[df['Date'] <= '2022-12-31']
 
+    # Remove extra date columns, rearrange columns.
     df = df.drop(columns=['Date_2019', 'Date_2020', 'Date_2021', 'Date_2022'])
-
     df = df[['Date', '2019', '2020', '2021', '2022']]
+
     df.to_csv('data/tsa-by-year.csv', index=False)
