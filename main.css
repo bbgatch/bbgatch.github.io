@@ -1,12 +1,3 @@
-/* 
-Colors:
-https://colorhunt.co/palette/f3f4ed536162424642c06014
-#F3F4ED
-#536162
-#424642
-#C06014
-*/
-
 html {
     font-family: 'JetBrains Mono', monospace, Arial, Helvetica, sans-serif;
 }
@@ -28,6 +19,16 @@ h2 {
 
 a {
     color: darkolivegreen;
+}
+
+code {
+    background-color: #e8e8e0;
+    font-size: 1.1em;
+}
+
+pre {
+    background: #e8e8e0;
+    padding: 1em;
 }
 
 footer {
