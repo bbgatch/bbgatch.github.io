@@ -4,7 +4,7 @@ html {
 
 body {
     font-size: 100%;
-    max-width: 1250px;
+    max-width: 1000px;
     margin: auto;
 }
 
@@ -24,11 +24,22 @@ a {
 code {
     background-color: #e8e8e0;
     font-size: 1.1em;
+    padding: 3px 2px;
 }
 
 pre {
     background: #e8e8e0;
     padding: 1em;
+}
+
+img {
+    max-width: 100%;
+}
+
+.center {
+    max-width: 100%;
+    margin: auto;
+    display: block;
 }
 
 footer {
@@ -69,4 +80,8 @@ footer p {
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+
+.tableauPlaceholder {
+    margin: auto;
 }

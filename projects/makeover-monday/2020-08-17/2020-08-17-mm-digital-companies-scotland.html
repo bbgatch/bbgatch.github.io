@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+  <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173201269-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-173201269-1');
+    </script>
+    <!------------------------------------------------------------------------->
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TSA passenger number data.">
+    <link href="../../../main.css" rel="stylesheet">
+
+    <!-- Import font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono">
+
+    <title>bbgatch | MM - Digital Companies in Scotland</title>
+
+  </head>
+
+
+  <body>
+
+    <!-- Navigation bar -->
+    <nav role="navigation" aria-label="Main menu">
+      <ul class="navbar">
+        <li><a href="../../../index.html">Home</a></li>
+      </ul>
+    </nav>
+
+    <h1>Where are digital companies based in Scotland?</h1>
+    
+        <p>Great Scott! This week's #MakeoverMonday looks at where digital companies are located in Scotland.</p>
+    
+    <h2>#MakeoverMonday | 2020-08-17</h2>
+
+    <h2>Original Visualization</h2>
+       <p>Here's the original visualization that we're making over:</p>
+       <img src="2020-08-17_original.jpg" alt="Original Viz" class="center"/>
+    
+      <p>There are a few things we can do to clean up the visualization.</p>
+      <ul>
+          <li><p>Remove the colors from the circles, they aren't adding much to the visual. The main message is how the size of the circles differs.</p></li>
+          <li><p>Remove the lines connecting the circles to the labels, we can simply adjust the labels to fit closer in.</p></li>
+          <li><p>Let's be consistent about using “&amp;” or “and” in labels.</p></li>
+      </ul>
+
+    <h2>Recreated Viz</h2>
+      <h3>Dual Axis Maps</h3>
+          <p>I've opted for a larger map with overlaid circles representing the number of companies in each location. In order to do this we need to use dual-axis maps, and I found this Tableau Knowledge Base article very helpful: <a href="https://help.tableau.com/current/pro/desktop/en-us/maps_dualaxis.htm">Tableau Dual Axis Maps</a></p>
+      <h3>Matching Unknown Locations</h3>
+          <p>I added an additional <code>Country</code> field to the data populated with “Scotland” so that Tableau could map the country. The <code>Region</code> field contains location names that most closely match to <code>County</code> in Tableau, and not all of the names match exactly.</p>
+          <p>I had to manually select Matching Locations for the unknown regions - this was an imperfect process as the <code>Region</code> field in the data contains some combinations of locations that Tableau has listed separately. For this visual, that is ok. If we wanted to be extra precise about where the labels are placed, we could add lat/long coordinates in the data.</p>
+          <img src="2020-08-17_edit-locations.png" alt="Matching Unknown Locations" class="center"/>
+  
+      <h3>Wrapping Labels</h3>
+          <p>Some of the <code>Region</code> names are very long and make it difficult to fit the mark labels together on the map. Sadly, turning on “Wrap” in the Label Alignment does nothing.</p>
+          <p>I forced the labels with two names to wrap using the calculated field below. Big thanks to <span class="citation" data-cites="dataunjaded">@dataunjaded</span>'s <a href="https://alanajade3.wixsite.com/dataunjaded/post/need-to-wrap-text-labels-in-tableau-just-press-enter">blog</a> for the help on this wrapping calculated field.</p>
+          <pre>
+              <code>
+                  // Only operates on labels with &quot;&amp;&quot;.
+                  if contains([Region], &quot;&amp;&quot;) then
+                  
+                  // Split on &quot;&amp; &quot; and add in a new line between the two names.
+                  split([Region], &quot;&amp; &quot;, 1)
+                  + &quot;&amp;&quot; +
+                  &#39;
+                  &#39;
+                  + split([Region], &quot;&amp; &quot;, 2)
+                  
+                  else Region
+                  end
+              </code>
+          </pre>
+                
+      <h3>Final Viz:</h3>
+        <!-- Link to Tableau viz -->
+        <div class='tableauPlaceholder' id='viz1646448865954' style='position: relative'><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='scotland-digital-companies&#47;DigitalCompaniesinScotland' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='en-US' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1646448865954');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='600px';vizElement.style.height='1027px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
+
+        <p>Thanks to <a href="https://www.tailorbrands.com/blog/logo-color-combinations">tailorbrands.com</a> for the color inspiration.</p>     
+        
+    <!-- Footer --------------------------------------------------------------->
+    <footer>
+      <a href="https://twitter.com/bbgatch"><img src="../../../images/twitter-logo.png" alt="Twitter logo.", width="30"></a>
+      <a href="https://github.com/bbgatch"><img src="../../../images/github-logo.png" alt="GitHub logo.", width="30"></a>
+      <a href="https://public.tableau.com/app/profile/bbgatch"><img src="../../../images/tableau-logo.png" alt="Tableau logo.", width="30"></a>
+      <a href="https://www.datacamp.com/profile/bbgatch"><img src="../../../images/datacamp-logo.png" alt="DataCamp logo.", width="30"></a>
+      <p>This site is hosted on <a href="https://pages.github.com/">GitHub Pages.</a> This font is <a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono.</a></p>
+    </footer>
+    <!-- ------------------------------------------------------------------- -->
+
+    </body>
+</html>
