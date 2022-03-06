@@ -42,7 +42,7 @@
 
     <h2>Original Visualization</h2>
        <p>Here's the original visualization that we're making over:</p>
-       <img src="2020-08-17_original.jpg" alt="Original Viz" class="center"/>
+       <img src="2020-08-17_original.jpg" alt="Original Viz" class="center responsive"/>
     
       <p>There are a few things we can do to clean up the visualization.</p>
       <ul>
@@ -57,7 +57,7 @@
       <h3>Matching Unknown Locations</h3>
           <p>I added an additional <code>Country</code> field to the data populated with “Scotland” so that Tableau could map the country. The <code>Region</code> field contains location names that most closely match to <code>County</code> in Tableau, and not all of the names match exactly.</p>
           <p>I had to manually select Matching Locations for the unknown regions - this was an imperfect process as the <code>Region</code> field in the data contains some combinations of locations that Tableau has listed separately. For this visual, that is ok. If we wanted to be extra precise about where the labels are placed, we could add lat/long coordinates in the data.</p>
-          <img src="2020-08-17_edit-locations.png" alt="Matching Unknown Locations" class="center"/>
+          <img src="2020-08-17_edit-locations.png" alt="Matching Unknown Locations" class="center responsive"/>
   
       <h3>Wrapping Labels</h3>
           <p>Some of the <code>Region</code> names are very long and make it difficult to fit the mark labels together on the map. Sadly, turning on “Wrap” in the Label Alignment does nothing.</p>
