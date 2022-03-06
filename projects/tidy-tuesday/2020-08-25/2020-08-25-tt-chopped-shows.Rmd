@@ -1,0 +1,99 @@
+---
+title: "What are the most popular dessert ingredients on Chopped?"
+output:
+  html_document:
+    keep_md: true
+layout: post
+date: 2020-08-25
+category: tidy-tuesday
+---
+
+This #TidyTuesday we're going into the kitchen with data about the show Chopped. There are many great ways we could look into this data, but let's treat ourselves and look at the most commonly used dessert ingredients.
+<!--more-->
+
+## 2020-08-25 #TidyTuesday
+
+```{r message=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+library(tibble)
+library(purrr)
+library(forcats)
+
+```
+
+
+```{r }
+# Get Data
+chopped <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-25/chopped.tsv')
+glimpse(chopped)
+
+```
+
+## Getting counts of dessert ingredients.
+
+Each episode has multiple dessert ingredients, so each row of data contains a list of those ingredients. We'll need to separate them out and count them up, but first we should check for and remove any NA values in the `dessert` column.
+```{r}
+# Look at dessert values. Each row has a list of ingredients.
+head(chopped$dessert, 10)
+
+# Check for NA dessert values.
+which(is.na(chopped$dessert))
+
+# Remove row 556 which doesn't have any dessert ingredients listed.
+chopped = chopped[-556, ]
+```
+
+Next we'll separate out each individual dessert ingredient from the list of lists they're currently in, and we'll use dplyr's `count` to get a count of each ingredient's appearance.
+```{r}
+# Split rows on comma and space to separate ingredients.
+ingr <- stringr::str_split(chopped$dessert, ", ")
+head(ingr)
+
+# Flatten list of lists to a single vector.
+ingr <- purrr::flatten_chr(ingr)
+head(ingr)
+
+# We could also use unlist and recursive = FALSE
+# ingr <- unlist(ingr, recursive = FALSE)
+
+# Convert to a tibble in order to use dplyr's count on the ingredients.
+ingr <- tibble::as_tibble_col(ingr, column_name = 'ingredient')
+head(ingr)
+
+# Count instances of each dessert ingredient.
+ingr <- ingr %>% dplyr::count(ingredient) %>% dplyr::arrange(desc(n))
+head(ingr, 10)
+```
+
+Now let's create our plot. We'll use `forcats::fct_reorder` to get the appropriate ingredient sort for our bars. I'm using every dessert-related color I can find from this handy [list of color names in R:](http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf) `peachpuff`, `papayawhip`, and `lemonchiffon`!
+```{r}
+# Convert list of ingredients to a factor so that we preserve our count descending ordering for our chart.
+ingr$ingredient <- forcats::fct_reorder(ingr$ingredient, ingr$n, .desc = FALSE)
+
+# Plot top 10 most frequently used ingredients.
+plt_data <- head(ingr, 10)
+ggplot(data = plt_data, aes(x = n, y = ingredient)) +
+  geom_bar(stat = "identity", fill = "peachpuff") +
+  labs(title = "Which dessert ingredients appear most often on Chopped?",
+       # subtitle = "Count of episodes each dessert ingredient appeared on.",
+       caption = "Source: Jeffrey Braun, Kaggle",
+       y = "",
+       x = "Number of Episodes") +
+  theme(plot.background = element_rect(fill = "papayawhip"),
+        panel.background = element_rect(fill = "lemonchiffon"),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.y = element_text(face = "bold"),
+        plot.subtitle = element_text(face = "italic"))
+  
+```
+
+```{r}
+# Saving a separate copy of the chart.
+ggsave("chopped-desserts.png")
+```
+

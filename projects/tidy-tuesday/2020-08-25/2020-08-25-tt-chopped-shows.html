@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+  <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173201269-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-173201269-1');
+    </script>
+    <!------------------------------------------------------------------------->
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TSA passenger number data.">
+    <link href="../../../main.css" rel="stylesheet">
+
+    <!-- Import font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono">
+
+    <title>bbgatch | TT Chopped Shows</title>
+
+  </head>
+
+  <body>
+
+    <!-- Navigation bar -->
+    <nav role="navigation" aria-label="Main menu">
+      <ul class="navbar">
+        <li><a href="../../../index.html">Home</a></li>
+      </ul>
+    </nav>
+
+    <h1>What are the most commonly used dessert ingredients on Chopped?</h1>
+    <p>This #TidyTuesday we're going into the kitchen with data about the show Chopped. There are many great ways we could look into this data, but let's treat ourselves and look at the most commonly used dessert ingredients.</p>
+    
+    <h2>#TidyTuesday | 2020-08-25</h2>
+    <div class="sourceCode" id="cb1">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">library</span>(readr)</span>
+        <span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="kw">library</span>(dplyr)</span>
+        <span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="kw">library</span>(ggplot2)</span>
+        <span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="kw">library</span>(tidyr)</span>
+        <span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="kw">library</span>(stringr)</span>
+        <span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a><span class="kw">library</span>(tibble)</span>
+        <span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a><span class="kw">library</span>(purrr)</span>
+        <span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a><span class="kw">library</span>(forcats)</span></code></pre>
+    </div>
+    <div class="sourceCode" id="cb2">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="co"># Get Data</span></span>
+        <span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>chopped &lt;-<span class="st"> </span>readr<span class="op">::</span><span class="kw">read_tsv</span>(<span class="st">&#39;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-25/chopped.tsv&#39;</span>)</span></code></pre>
+    </div>
+    <pre><code>## Parsed with column specification:
+        ## cols(
+        ##   .default = col_character(),
+        ##   season = col_double(),
+        ##   season_episode = col_double(),
+        ##   series_episode = col_double(),
+        ##   episode_rating = col_double()
+        ## )</code></pre>
+    <pre><code>## See spec(...) for full column specifications.</code></pre>
+    <div class="sourceCode" id="cb5">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="kw">glimpse</span>(chopped)</span></code></pre>
+    </div>
+    <pre><code>## Rows: 569
+        ## Columns: 21
+        ## $ season           &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,...
+        ## $ season_episode   &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 2, 3...
+        ## $ series_episode   &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
+        ## $ episode_rating   &lt;dbl&gt; 9.2, 8.8, 8.9, 8.5, 8.8, 8.5, 8.8, 9.0, 8.9, 8.8, ...
+        ## $ episode_name     &lt;chr&gt; &quot;Octopus, Duck, Animal Crackers&quot;, &quot;Tofu, Blueberri...
+        ## $ episode_notes    &lt;chr&gt; &quot;This is the first episode with only three officia...
+        ## $ air_date         &lt;chr&gt; &quot;January 13, 2009&quot;, &quot;January 20, 2009&quot;, &quot;January 2...
+        ## $ judge1           &lt;chr&gt; &quot;Marc Murphy&quot;, &quot;Aarón Sánchez&quot;, &quot;Aarón Sánchez&quot;, &quot;...
+        ## $ judge2           &lt;chr&gt; &quot;Alex Guarnaschelli&quot;, &quot;Alex Guarnaschelli&quot;, &quot;Alex ...
+        ## $ judge3           &lt;chr&gt; &quot;Aarón Sánchez&quot;, &quot;Marc Murphy&quot;, &quot;Marc Murphy&quot;, &quot;Ge...
+        ## $ appetizer        &lt;chr&gt; &quot;baby octopus, bok choy, oyster sauce, smoked papr...
+        ## $ entree           &lt;chr&gt; &quot;duck breast, green onions, ginger, honey&quot;, &quot;daiko...
+        ## $ dessert          &lt;chr&gt; &quot;prunes, animal crackers, cream cheese&quot;, &quot;phyllo d...
+        ## $ contestant1      &lt;chr&gt; &quot;Summer Kriegshauser&quot;, &quot;Raymond Jackson&quot;, &quot;Margari...
+        ## $ contestant1_info &lt;chr&gt; &quot;Private Chef and Nutrition Coach  New York  NY&quot;, ...
+        ## $ contestant2      &lt;chr&gt; &quot;Perry Pollaci&quot;, &quot;Klaus Kronsteiner&quot;, &quot;Rachelle Ro...
+        ## $ contestant2_info &lt;chr&gt; &quot;Private Chef and Sous chef  Bar Blanc  New York  ...
+        ## $ contestant3      &lt;chr&gt; &quot;Katie Rosenhouse&quot;, &quot;Christopher Jackson&quot;, &quot;Chris ...
+        ## $ contestant3_info &lt;chr&gt; &quot;Pastry Chef  Olana Restaurant  New York  NY&quot;, &quot;Ex...
+        ## $ contestant4      &lt;chr&gt; &quot;Sandy Davis&quot;, &quot;Pippa Calland&quot;, &quot;Andre Marrero&quot;, &quot;...
+        ## $ contestant4_info &lt;chr&gt; &quot;Catering Chef  Showstoppers Catering at Union The...</code></pre>
+    
+    <h2>Getting counts of dessert ingredients.</h2>
+    <p>Each episode has multiple dessert ingredients, so each row of data contains a list of those ingredients. We'll need to separate them out and count them up, but first we should check for and remove any NA values in the <code>dessert</code> column.</p>
+    
+    <div class="sourceCode" id="cb7">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="co"># Look at dessert values. Each row has a list of ingredients.</span></span>
+        <span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a><span class="kw">head</span>(chopped<span class="op">$</span>dessert, <span class="dv">10</span>)</span></code></pre>
+    </div>
+    <pre><code>##  [1] &quot;prunes, animal crackers, cream cheese&quot;                        
+        ##  [2] &quot;phyllo dough, gorgonzola cheese, pineapple rings, blueberries&quot;
+        ##  [3] &quot;brioche, cantaloupe, pecans, avocados&quot;                        
+        ##  [4] &quot;maple syrup, black plums, almond butter, walnuts, quick grits&quot;
+        ##  [5] &quot;flour tortillas, prosecco, Canadian bacon, roasted chestnuts&quot; 
+        ##  [6] &quot;beets, goat cheese, quick cook oatmeal, crystallized ginger&quot;  
+        ##  [7] &quot;pitted dates, frozen pie crust, caramel candy, stout beer&quot;    
+        ##  [8] &quot;plain donuts, smoked gouda, white chocolate, dried apricots&quot;  
+        ##  [9] &quot;oranges, grapefruit, semi-sweet chocolate chips, bacon&quot;       
+        ## [10] &quot;ginger snaps, crème fraîche, instant coffee, carrots&quot;</code></pre>
+    <div class="sourceCode" id="cb9">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co"># Check for NA dessert values.</span></span>
+        <span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a><span class="kw">which</span>(<span class="kw">is.na</span>(chopped<span class="op">$</span>dessert))</span></code></pre>
+    </div>
+    <pre><code>## [1] 556</code></pre>
+    <div class="sourceCode" id="cb11">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="co"># Remove row 556 which doesn&#39;t have any dessert ingredients listed.</span></span>
+        <span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a>chopped =<span class="st"> </span>chopped[<span class="op">-</span><span class="dv">556</span>, ]</span></code></pre>
+    </div>
+    
+    <p>Next we'll separate out each individual dessert ingredient from the list of lists they're currently in, and we'll use
+      dplyr's <code>count</code> to get a count of each ingredient's appearance.</p>
+    
+    <div class="sourceCode" id="cb12">
+      <pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="co"># Split rows on comma and space to separate ingredients.</span></span>
+        <span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a>ingr &lt;-<span class="st"> </span>stringr<span class="op">::</span><span class="kw">str_split</span>(chopped<span class="op">$</span>dessert, <span class="st">&quot;, &quot;</span>)</span>
+        <span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a><span class="kw">head</span>(ingr)</span></code></pre>
+    </div>
+    <pre><code>## [[1]]
+        ## [1] &quot;prunes&quot;          &quot;animal crackers&quot; &quot;cream cheese&quot;   
+        ## 
+        ## [[2]]
+        ## [1] &quot;phyllo dough&quot;      &quot;gorgonzola cheese&quot; &quot;pineapple rings&quot;  
+        ## [4] &quot;blueberries&quot;      
+        ## 
+        ## [[3]]
+        ## [1] &quot;brioche&quot;    &quot;cantaloupe&quot; &quot;pecans&quot;     &quot;avocados&quot;  
+        ## 
+        ## [[4]]
+        ## [1] &quot;maple syrup&quot;   &quot;black plums&quot;   &quot;almond butter&quot; &quot;walnuts&quot;      
+        ## [5] &quot;quick grits&quot;  
+        ## 
+        ## [[5]]
+        ## [1] &quot;flour tortillas&quot;   &quot;prosecco&quot;          &quot;Canadian bacon&quot;   
+        ## [4] &quot;roasted chestnuts&quot;
+        ## 
+        ## [[6]]
+        ## [1] &quot;beets&quot;               &quot;goat cheese&quot;         &quot;quick cook oatmeal&quot; 
+        ## [4] &quot;crystallized ginger&quot;</code></pre>
+    <div class="sourceCode" id="cb14">
+      <pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="co"># Flatten list of lists to a single vector.</span></span>
+        <span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a>ingr &lt;-<span class="st"> </span>purrr<span class="op">::</span><span class="kw">flatten_chr</span>(ingr)</span>
+        <span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a><span class="kw">head</span>(ingr)</span></code></pre>
+    </div>
+    <pre><code>## [1] &quot;prunes&quot;            &quot;animal crackers&quot;   &quot;cream cheese&quot;     
+        ## [4] &quot;phyllo dough&quot;      &quot;gorgonzola cheese&quot; &quot;pineapple rings&quot;</code></pre>
+    <div class="sourceCode" id="cb16">
+      <pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="co"># We could also use unlist and recursive = FALSE</span></span>
+        <span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a><span class="co"># ingr &lt;- unlist(ingr, recursive = FALSE)</span></span>
+        <span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a></span>
+        <span id="cb16-4"><a href="#cb16-4" aria-hidden="true"></a><span class="co"># Convert to a tibble in order to use dplyr&#39;s count on the ingredients.</span></span>
+        <span id="cb16-5"><a href="#cb16-5" aria-hidden="true"></a>ingr &lt;-<span class="st"> </span>tibble<span class="op">::</span><span class="kw">as_tibble_col</span>(ingr, <span class="dt">column_name =</span> <span class="st">&#39;ingredient&#39;</span>)</span>
+        <span id="cb16-6"><a href="#cb16-6" aria-hidden="true"></a><span class="kw">head</span>(ingr)</span></code></pre>
+    </div>
+    <pre><code>## # A tibble: 6 x 1
+        ##   ingredient       
+        ##   &lt;chr&gt;            
+        ## 1 prunes           
+        ## 2 animal crackers  
+        ## 3 cream cheese     
+        ## 4 phyllo dough     
+        ## 5 gorgonzola cheese
+        ## 6 pineapple rings</code></pre>
+    <div class="sourceCode" id="cb18">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="co"># Count instances of each dessert ingredient.</span></span>
+        <span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a>ingr &lt;-<span class="st"> </span>ingr <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">count</span>(ingredient) <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">arrange</span>(<span class="kw">desc</span>(n))</span>
+        <span id="cb18-3"><a href="#cb18-3" aria-hidden="true"></a><span class="kw">head</span>(ingr, <span class="dv">10</span>)</span></code></pre>
+    </div>
+    <pre><code>## # A tibble: 10 x 2
+        ##    ingredient             n
+        ##    &lt;chr&gt;              &lt;int&gt;
+        ##  1 blackberries          13
+        ##  2 blueberries           10
+        ##  3 figs                  10
+        ##  4 cream cheese           9
+        ##  5 marshmallow spread     9
+        ##  6 peaches                9
+        ##  7 rambutan               9
+        ##  8 strawberries           9
+        ##  9 bananas                8
+        ## 10 blood oranges          8</code></pre>
+    
+    <p>Now let's create our plot. We'll use <code>forcats::fct_reorder</code> to get the appropriate ingredient sort for our bars. I'm using every dessert-related color I can find from this handy <a href="http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf">list of color names in R:</a> <code>peachpuff</code>, <code>papayawhip</code>, and <code>lemonchiffon</code>!</p>
+    
+    <div class="sourceCode" id="cb20">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a><span class="co"># Convert list of ingredients to a factor so that we preserve our count descending ordering for our chart.</span></span>
+        <span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a>ingr<span class="op">$</span>ingredient &lt;-<span class="st"> </span>forcats<span class="op">::</span><span class="kw">fct_reorder</span>(ingr<span class="op">$</span>ingredient, ingr<span class="op">$</span>n, <span class="dt">.desc =</span> <span class="ot">FALSE</span>)</span>
+        <span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a></span>
+        <span id="cb20-4"><a href="#cb20-4" aria-hidden="true"></a><span class="co"># Plot top 10 most frequently used ingredients.</span></span>
+        <span id="cb20-5"><a href="#cb20-5" aria-hidden="true"></a>plt_data &lt;-<span class="st"> </span><span class="kw">head</span>(ingr, <span class="dv">10</span>)</span>
+        <span id="cb20-6"><a href="#cb20-6" aria-hidden="true"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> plt_data, <span class="kw">aes</span>(<span class="dt">x =</span> n, <span class="dt">y =</span> ingredient)) <span class="op">+</span></span>
+        <span id="cb20-7"><a href="#cb20-7" aria-hidden="true"></a><span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;peachpuff&quot;</span>) <span class="op">+</span></span>
+        <span id="cb20-8"><a href="#cb20-8" aria-hidden="true"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Which dessert ingredients appear most often on Chopped?&quot;</span>,</span>
+        <span id="cb20-9"><a href="#cb20-9" aria-hidden="true"></a>       <span class="co"># subtitle = &quot;Count of episodes each dessert ingredient appeared on.&quot;,</span></span>
+        <span id="cb20-10"><a href="#cb20-10" aria-hidden="true"></a>       <span class="dt">caption =</span> <span class="st">&quot;Source: Jeffrey Braun, Kaggle&quot;</span>,</span>
+        <span id="cb20-11"><a href="#cb20-11" aria-hidden="true"></a>       <span class="dt">y =</span> <span class="st">&quot;&quot;</span>,</span>
+        <span id="cb20-12"><a href="#cb20-12" aria-hidden="true"></a>       <span class="dt">x =</span> <span class="st">&quot;Number of Episodes&quot;</span>) <span class="op">+</span></span>
+        <span id="cb20-13"><a href="#cb20-13" aria-hidden="true"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">plot.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;papayawhip&quot;</span>),</span>
+        <span id="cb20-14"><a href="#cb20-14" aria-hidden="true"></a>        <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;lemonchiffon&quot;</span>),</span>
+        <span id="cb20-15"><a href="#cb20-15" aria-hidden="true"></a>        <span class="dt">axis.ticks =</span> <span class="kw">element_blank</span>(),</span>
+        <span id="cb20-16"><a href="#cb20-16" aria-hidden="true"></a>        <span class="dt">panel.grid =</span> <span class="kw">element_blank</span>(),</span>
+        <span id="cb20-17"><a href="#cb20-17" aria-hidden="true"></a>        <span class="dt">axis.text.y =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>),</span>
+        <span id="cb20-18"><a href="#cb20-18" aria-hidden="true"></a>        <span class="dt">plot.subtitle =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;italic&quot;</span>))</span></code></pre>
+    </div>
+    
+    <img class="center" src="chopped-desserts.png"/>
+    </p>
+
+    <div class="sourceCode" id="cb21">
+      <pre
+        class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true"></a><span class="co"># Saving a separate copy of the chart.</span></span>
+        <span id="cb21-2"><a href="#cb21-2" aria-hidden="true"></a><span class="kw">ggsave</span>(<span class="st">&quot;chopped-desserts.png&quot;</span>)</span></code></pre>
+    </div>
+    
+    <!-- Footer --------------------------------------------------------------->
+    <footer>
+      <a href="https://twitter.com/bbgatch"><img src="../../../images/twitter-logo.png" alt="Twitter logo.", width="30"></a>
+      <a href="https://github.com/bbgatch"><img src="../../../images/github-logo.png" alt="GitHub logo.", width="30"></a>
+      <a href="https://public.tableau.com/app/profile/bbgatch"><img src="../../../images/tableau-logo.png" alt="Tableau logo.", width="30"></a>
+      <a href="https://www.datacamp.com/profile/bbgatch"><img src="../../../images/datacamp-logo.png" alt="DataCamp logo.", width="30"></a>
+      <a href="https://www.kaggle.com/bbgatch"><img src="../../../images/kaggle-logo.png" alt="Kaggle logo.", width="30"></a>
+      <p>This site is hosted on <a href="https://pages.github.com/">GitHub Pages.</a>
+         This font is <a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono.</a></p>
+    </footer>
+    <!-- ------------------------------------------------------------------- -->
+
+  </body>
+
+</html>
