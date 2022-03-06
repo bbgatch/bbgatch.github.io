@@ -21,16 +21,17 @@ a {
     color: darkolivegreen;
 }
 
-code {
+/* Switched to using highlight.js for code formatting. */
+/* code {
     background-color: #e8e8e0;
     font-size: 1.1em;
     padding: 3px 2px;
-}
+} */
 
-pre {
+/* pre {
     background: #e8e8e0;
     padding: 1em;
-}
+} */
 
 img {
     max-width: 100%;
