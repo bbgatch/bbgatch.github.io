@@ -36,12 +36,6 @@ img {
     max-width: 100%;
 }
 
-.center {
-    max-width: 100%;
-    margin: auto;
-    display: block;
-}
-
 footer {
     background-color: #e8e8e0;
     padding-top: 8px;
