@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+  <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173201269-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-173201269-1');
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TSA passenger number data.">
+    <link href="../../main.css" rel="stylesheet">
+ 
+    <!-- Import highlight.js for code formatting and highlighting. --------- -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- ------------------------------------------------------------------- -->
+
+    <!-- Import font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono">
+
+    <title>bbgatch | TSA Checkpoint Data</title>
+  </head>
+
+  <body>
+
+    <!-- Navigation bar -->
+    <nav role="navigation" aria-label="Main menu">
+      <ul class="navbar">
+        <li><a href="../../index.html">Home</a></li>
+      </ul>
+    </nav>
+
+
+    <h1>How to Pull TSA Checkpoint Passenger Data</h1>
+    
+    <p>At the start of the Covid-19 outbreak, the U.S. Transportation Security
+       Administration <a href="https://www.tsa.gov/coronavirus/passenger-throughput">began sharing TSA security checkpoint passenger throughput numbers.</a></p>
+
+    <p>Currently the data looks like this on their site:</p>
+    <img src="images/tsa-site-original-data.png" alt="Original TSA data on the TSA site." class="responsive">
+
+    <p>We have daily data with columns for the current and past three years. Based on the way this is structured, we can reasonably assume that the data is day-matched to the same day of the week in the prior years.</p>
+
+    <!-- Footer --------------------------------------------------------------->
+    <footer>
+      <a href="https://twitter.com/bbgatch"><img src="../../images/twitter-logo.png" alt="Twitter logo.", width="30"></a>
+      <a href="https://github.com/bbgatch"><img src="../../images/github-logo.png" alt="GitHub logo.", width="30"></a>
+      <a href="https://public.tableau.com/app/profile/bbgatch"><img src="../../images/tableau-logo.png" alt="Tableau logo.", width="30"></a>
+      <a href="https://www.datacamp.com/profile/bbgatch"><img src="../../images/datacamp-logo.png" alt="DataCamp logo.", width="30"></a>
+      <a href="https://www.kaggle.com/bbgatch"><img src="../../images/kaggle-logo.png" alt="Kaggle logo.", width="30"></a>
+      <p>This site is hosted on <a href="https://pages.github.com/">GitHub Pages.</a>
+         This font is <a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono.</a></p>
+    </footer>
+    <!-- ------------------------------------------------------------------- -->
+
+  </body>
+
+</html>
