@@ -40,14 +40,156 @@
 
 
     <h1>How to Pull TSA Checkpoint Passenger Data</h1>
-    
-    <p>At the start of the Covid-19 outbreak, the U.S. Transportation Security
-       Administration <a href="https://www.tsa.gov/coronavirus/passenger-throughput">began sharing TSA security checkpoint passenger throughput numbers.</a></p>
+      
+      <p>At the start of the Covid-19 outbreak, the U.S. Transportation Security
+        Administration began sharing <a href="https://www.tsa.gov/coronavirus/passenger-throughput">TSA security checkpoint passenger throughput numbers.</a></p>
 
-    <p>Currently the data looks like this on their site:</p>
-    <img src="images/tsa-site-original-data.png" alt="Original TSA data on the TSA site." class="responsive">
+      <p>Currently the data looks like this on their site:</p>
+      <img src="images/tsa-site-original-data.png" alt="Original TSA data on the TSA site." class="responsive">
 
-    <p>We have daily data with columns for the current and past three years. Based on the way this is structured, we can reasonably assume that the data is day-matched to the same day of the week in the prior years.</p>
+      <p>We have daily data with columns for the current and past three years. Based on the way this looks with each prior year in a new column, the prior year data is likely showing TSA checkpoint passengers on the same day of the week in that prior year. In other words, it is day-matched to the same day of the week in the prior years. We'll want to tidy this data, but first we need to get it into Python.</p>
+
+      <p>In 2020 when I first started pulling this data, I followed the steps in <a href="https://towardsdatascience.com/web-scraping-html-tables-with-python-c9baba21059">this great article</a> to automate this process. That is still a great way to pull the data, but I just recently discovered that pandas has a built-in <code>pull_html()</code> function! This will greatly simplify the process. Thanks to <a href="https://towardsdatascience.com/a-guide-to-scraping-html-tables-with-pandas-and-beautifulsoup-7fc24c331cf7">this other article</a> for helping me discover this.</p>
+
+      <h2>Using pandas <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_html.html"><code>read_html()</code></a> to simplify reading HTML tables</h2>
+
+        <p>We should be able to simply call:</p>
+        
+        <pre>
+          <code>
+            pd.read_html("https://www.tsa.gov/coronavirus/passenger-throughput")</code>
+          </code>
+        </pre>
+        
+        <p>You can try this yourself and see if it works. Unfortunately I get a <code>HTTP Error 403: Forbidden</code> error, but we can use a simple <a href="https://stackoverflow.com/questions/43590153/http-error-403-forbidden-when-reading-html">workaround</a>.</p>
+
+        <p>We can use the <a href="https://docs.python-requests.org/en/latest/"><code>requests</code></a> library to first read the page and then parse it with <code>pd.read_html()</code>.</p>
+
+        <pre>
+          <code>
+            import requests
+            import pandas as pd
+
+            # URL that we want to pull TSA data from
+            url = "https://www.tsa.gov/coronavirus/passenger-throughput"
+        
+            # Read the page using requests.get()
+            r = requests.get(url)
+          </code>
+        </pre>
+        
+        <p>If we now print <code>r</code>, it just shows <code>&lt;Response [200]&gt;</code>, but if we print <code>r.text</code> then it will print the full HTML text of the website. This will print a massive jumble of text to the console, but if you scroll up and look through, you'll notice many <code>tr</code> and <code>td</code> tags along with dates and numbers. That is the data we're trying to get. As <a href="https://towardsdatascience.com/a-guide-to-scraping-html-tables-with-pandas-and-beautifulsoup-7fc24c331cf7">this article</a> explains about half-way through, each row in an HTML table is denoted with the <code>tr</code> ("table row") tag and each data point is denoted with the <code>td</code> ("table data") tag. Here is another helpful reference on <a href="https://www.w3schools.com/html/html_tables.asp">HTML tables.</a></p>
+
+        <img src="images/tsa-site-html-text.png" alt="TSA site HTML text with highlighted components." class="responsive">
+        
+        <p>Thankfully, our trusty friend pandas will do all of the <code>tr</code> and <code>td</code> parsing for us. We can now call <code>pd.read_html(r.text)</code> on the <code>r.text</code> HTML text that we looked through earlier.</p>
+        
+        <pre>
+          <code>
+            # Use pd.read_html() to parse the page html
+            df = pd.read_html(r.text)
+          </code>
+        </pre>
+        
+      <h2><code>read_html()</code> returns a list of dataframes</h2>
+
+        <p>Now if we print <code>df</code> it looks like this:</p>
+
+        <pre>
+          <code>
+            [          Date       2022     2021     2020     2019
+            0    3/14/2022  2200172.0  1267345  1257823  2465709
+            1    3/13/2022  2288800.0  1345284  1519192  2545742
+            2    3/12/2022  1990954.0  1227484  1485553  2274658
+            3    3/11/2022  2297374.0  1409771  1714372  2634215
+            4    3/10/2022  2184044.0  1286894  1788456  2503924
+            ..         ...        ...      ...      ...      ...
+            359  3/20/2021        NaN  1373259   548132  2227181
+            360  3/19/2021        NaN  1477841   593167  2559307
+            361  3/18/2021        NaN  1413141   620883  2513231
+            362  3/17/2021        NaN  1146539   779631  2320885
+            363  3/16/2021        NaN  1092548   953699  2177929
+            
+            [364 rows x 5 columns]]
+          </code>
+        </pre>
+
+        <p>Amazingly, this looks like a pandas dataframe that we can use! However we have to take one more step before proceeding. Notice the extra <code>[</code> at the very start of the dataframe and the closing <code>]</code> at the very end. This is easy to miss, but it tells us that we actually now have a list of 1 dataframe.</p>
+
+        <p>This is the default behavior of <code>pd.read_html()</code>. As the <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_html.html">documents</a> say, the function will "Read HTML tables into a list of DataFrame objects." The end of the documents page also says "This function will <em>always</em> return a list of <code>DataFrame</code> <em>or</em> it will fail, e.g., it will <em>not</em> return an empty list." If the site happened to have multiple tables on it, pandas would try to read all of them and store them as separate dataframes within the returned list.</p>
+
+        <p>We can confirm that we have a list of 1 dataframe with <code>type()</code> and <code>len()</code>:</p>
+        
+        <pre>
+          <code>
+            >>> type(df)
+            &lt;class 'list'&gt;
+            >>> len(df)
+            1
+          </code>
+        </pre>
+
+        <p>We can select the first element in our list to pull out the dataframe. Then we can convert the <code>Date</code> field from text to datetime and sort by <code>Date</code>. Finally, can save the data for later use!</p>
+
+        <pre>
+          <code>
+            # The result is a list of 1 dataframe, we need to select that dataframe from the list
+            df = df[0]
+        
+            # Changing data types.
+            df['Date'] = pd.to_datetime(df['Date'])
+        
+            # Sorting by Date.
+            df = df.sort_values(by = 'Date')
+        
+            # Save data in original format
+            df.to_csv('data/tsa-orig.csv', index=False)
+            print('Data pulled.')
+          </code>
+        </pre>
+
+
+      <h2>Final code</h2>
+        
+        <p>Now here is the complete code:</p>
+
+
+        <pre>
+          <code>
+            import requests
+            import pandas as pd
+            
+            def pull_data():
+                '''
+                Pull TSA checkpoint traveler data from https://www.tsa.gov/coronavirus/passenger-throughput
+                '''
+                # Guided by:
+                # https://towardsdatascience.com/a-guide-to-scraping-html-tables-with-pandas-and-beautifulsoup-7fc24c331cf7
+                # https://stackoverflow.com/questions/43590153/http-error-403-forbidden-when-reading-html
+            
+                # URL that we want to pull TSA data from
+                url = "https://www.tsa.gov/coronavirus/passenger-throughput"
+            
+                # Read the page using requests.get()
+                r = requests.get(url)
+                
+                # Use pd.read_html() to parse the html text
+                df = pd.read_html(r.text)
+            
+                # The result is a list of 1 dataframe, we need to select that dataframe from the list
+                df = df[0]
+            
+                # Changing data types.
+                df['Date'] = pd.to_datetime(df['Date'])
+            
+                # Sorting by Date.
+                df = df.sort_values(by='Date')
+            
+                # Save data in original format
+                df.to_csv('data/tsa-orig.csv', index=False)
+                print('Data pulled.')
+          </code>
+        </pre> 
 
     <!-- Footer --------------------------------------------------------------->
     <footer>

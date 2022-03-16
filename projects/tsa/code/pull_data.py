@@ -1,60 +1,31 @@
 import requests
-import lxml.html as lh
 import pandas as pd
-import datetime as dt
-from datetime import date, timedelta
 
 def pull_data():
     '''
     Pull TSA checkpoint traveler data from https://www.tsa.gov/coronavirus/passenger-throughput
     '''
     # Guided by:
-    # https://towardsdatascience.com/web-scraping-html-tables-with-python-c9baba21059
+    # https://towardsdatascience.com/a-guide-to-scraping-html-tables-with-pandas-and-beautifulsoup-7fc24c331cf7
+    # https://stackoverflow.com/questions/43590153/http-error-403-forbidden-when-reading-html
 
+    # URL that we want to pull TSA data from
     url = "https://www.tsa.gov/coronavirus/passenger-throughput"
 
-    # Create handle for the site contents.
-    page = requests.get(url)
+    # Read the page using requests.get()
+    r = requests.get(url)
+    
+    # Use pd.read_html() to parse the html text
+    df = pd.read_html(r.text)
 
-    # Store the contents of the website.
-    doc = lh.fromstring(page.content)
-
-    # Parse data stored between <tr>..</tr> in HTML
-    tr_elements = doc.xpath('//tr')
-
-    # Pulling out the header names
-    colnames = []
-    for t in tr_elements[0]:
-        name = t.text_content()
-        colnames.append(name)
-
-    # Creating lists of table data.
-    data = [[], [], [], [], []]
-    for row in tr_elements[1:]:
-        i = 0
-        for cell in row.iterchildren():
-            datum = cell.text_content()
-            datum = str(datum)
-            # print(datum)
-            datum = datum.strip()
-            data[i].append(datum)
-            i += 1
-
-    # Converting to dictionary for easier transition to Pandas dataframe.
-    df = dict(zip(colnames, data))
-
-    # Converting from dictionary to Pandas dataframe.
-    df = pd.DataFrame(df)
+    # The result is a list of 1 dataframe, we need to select that dataframe from the list
+    df = df[0]
 
     # Changing data types.
     df['Date'] = pd.to_datetime(df['Date'])
-    df['2022'] = pd.to_numeric(df['2022'].str.replace(',', ''))
-    df['2021'] = pd.to_numeric(df['2021'].str.replace(',', ''))
-    df['2020'] = pd.to_numeric(df['2020'].str.replace(',', ''))
-    df['2019'] = pd.to_numeric(df['2019'].str.replace(',', ''))
 
     # Sorting by Date.
-    df = df.sort_values(by = 'Date')
+    df = df.sort_values(by='Date')
 
     # Save data in original format
     df.to_csv('data/tsa-orig.csv', index=False)

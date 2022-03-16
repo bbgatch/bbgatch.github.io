@@ -22,11 +22,11 @@ a {
 }
 
 /* Switched to using highlight.js for code formatting. */
-/* code {
+code {
     background-color: #e8e8e0;
     font-size: 1.1em;
     padding: 3px 2px;
-} */
+}
 
 /* pre {
     background: #e8e8e0;
@@ -75,6 +75,8 @@ footer p {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .tableauPlaceholder {
