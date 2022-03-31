@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
@@ -277,3 +278,103 @@ def plot_percent_of_2019_by_year(width=10, height=6, show_plot=False):
         plt.show()
     print('Percent of 2019 trend chart by year created.')
 
+
+def plot_weekly_midweek_trend_by_year(width=10, height=6, show_plot=False):
+    '''Plot weekly Monday - Wednesday trend of TSA checkpoint passnegers by year.
+    Monday - Wednesday are peak business travel times, so this gives a rough 
+    approximation of business travel trends.'''
+
+    # Get latest date
+    df = pd.read_csv('data/tsa.csv')
+    df['Date'] = pd.to_datetime(df['Date'])
+    latest_date = max(df['Date']).strftime('%Y-%m-%d')
+    latest_week_number = pd.to_datetime(latest_date).week
+    
+    # Check if we have a full week of new data, if not then we'll need to delete
+    # any recent days until we have a full week of data.
+    if pd.to_datetime(latest_date).dayofweek == 6:
+        full_week_of_data = True
+    else:
+        full_week_of_data = False
+
+    # Read in data by year, create week number and day-of-week fields
+    df = pd.read_csv('data/tsa-by-year.csv')
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Week'] = df['Date'].dt.week
+    df['DOW'] = df['Date'].dt.dayofweek
+    
+    # If we don't have a full week of new data, then delete the partial week of 
+    # data for the current week.
+    if full_week_of_data == False:
+        df.loc[df['Week'] == latest_week_number, '2022'] = np.nan
+
+    # Adjusted latest_date to the most recent end-of-week date for which we have
+    # complete weekly data.
+    latest_date = max(df.loc[df['2022'] >= 0, 'Date']).strftime('%Y-%m-%d')
+
+    # Filter for only Mon - Wed dates. Monday = 0, Tuesday = 1, etc.
+    # https://pandas.pydata.org/docs/reference/api/pandas.DatetimeIndex.dayofweek.html
+    df = df[df['DOW'].isin([0, 1, 2])]
+    df = df.drop(columns=['DOW', 'Date'])
+    df = df.groupby(by='Week').sum()
+    df = df.reset_index()
+
+    # When doing the groupby and sum, any future 2022 values become 0, so we 
+    # need to reset then to NaN.
+    df.loc[df['2022'] == 0, '2022'] = np.nan
+
+    # Get year labels from columns
+    years = df.columns[1:].sort_values()
+    num_years = len(years)
+
+    # Create colors for each year
+    cmap = cm.get_cmap('Purples')
+    colors = [0.2, 0.4, 0.6, 0.95]
+
+    plt.figure(figsize=(width, height))
+    for i in range(num_years):
+        plt.plot(df['Week'],
+                df[years[i]],
+                label=years[i],
+                color=cmap(colors[i])
+                )
+    plt.legend()
+    plt.xlabel('Week Number')
+    plt.suptitle('U.S. Weekly Monday - Wednesday TSA Checkpoint Passengers',
+                 x=0.01,
+                 y=0.98,
+                 fontweight='bold',
+                 fontsize='x-large',
+                 horizontalalignment='left')
+    plt.figtext(0.99, 0.01, 'Data through ' + latest_date,
+                ha = 'right',
+                fontstyle='italic')
+    plt.figtext(0.01, 0.01, 'Approximating midweek business travel by looking at Mon-Wed.',
+                ha = 'left',
+                fontstyle='italic')
+
+    # Highlight latest data point
+    if full_week_of_data == False:
+        latest_week_number = latest_week_number - 1
+
+    latest_number = df[df['Week'] == latest_week_number]['2022']
+    latest_number = int(latest_number.iloc[0])
+    plt.scatter(latest_week_number,
+                latest_number,
+                color='goldenrod',
+                alpha=0.7,
+                s=70,
+                zorder=2.5)
+    plt.annotate("{:,}".format(latest_number),
+                 xy=(latest_week_number, latest_number * 1.02),
+                 horizontalalignment='center'
+                )
+
+    # Convert axis labels to commas and remove scientific notation
+    current_values = plt.gca().get_yticks()
+    plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
+    
+    plt.savefig('images/tsa-midweek-by-year.png')
+    if show_plot:
+        plt.show()
+    print('Midweek business travel trend chart by year created.')
