@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+  <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173201269-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-173201269-1');
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TSA passenger number data.">
+    <link href="../../../main.css" rel="stylesheet">
+ 
+    <!-- Import highlight.js for code formatting and highlighting. --------- -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/base16/apprentice.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- ------------------------------------------------------------------- -->
+
+    <!-- Import font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono">
+
+    <title>bbgatch | How to Backcast with fable</title>
+  </head>
+
+  <body>
+
+    <!-- Navigation bar -->
+    <nav role="navigation" aria-label="Main menu">
+      <ul class="navbar">
+        <li><a href="../../../index.html">Home</a></li>
+      </ul>
+    </nav>
+
+
+    <h1>How to Backcast with the <code>fable</code> Package in R</h1>
+      
+      <p>The TSA data that we've pulled starts at 2019-01-05, so we're missing just four days of data. It would be very helpful to have a reasonable estimate for these four days if we want to give a summed number for January or full-year 2019. This is a perfect case where we can use backcasting to impute these missing values.</p>
+
+      <p>If you have any interest in forecasting, I highly recommend the <a href="https://fable.tidyverts.org/"><code>fable</code></a> package from Mitchell O'Hara-Wild, the great Rob Hyndman, and Earo Wang. It's the newest iteration of the well-known <code>forecast</code> package, and it plays well with the <a href="https://www.tidyverse.org/">tidyverse</a>. I also recommend the excellent book <a href="https://otexts.com/fpp3/"><cite>Forecasting: Principles and Practice</cite></a> by Rob Hyndman and George Athanasopoulos, which walks through fundamental forecasting principles using <code>fable</code>. <a href="https://otexts.com/fpp3/backcasting.html">In the last chapter of that book</a>, they mention that <code>fable</code> can backcast if we need to predict what prior values were. They give the example code below. Let's walk through this backcasting process and show how we can apply this to our TSA data.</p>
+
+      <pre>
+				<code class="language-r">
+          # Example code from Forecasting: Principles and Practice
+          backcasts <- auscafe %>%
+            mutate(reverse_time = rev(row_number())) %>%
+            update_tsibble(index = reverse_time) %>%
+            model(ets = ETS(Turnover ~ season(period = 12))) %>%
+            forecast(h = 15) %>%
+            mutate(Month = auscafe$Month[1] - (1:15)) %>%
+            as_fable(index = Month, response = "Turnover",
+              distribution = "Turnover")
+            
+          backcasts %>%
+            autoplot(auscafe %>% filter(year(Month) < 1990)) +
+            labs(title = "Backcasts of Australian food expenditure",
+                y = "$ (billions)")
+        </code>
+      </pre>
+
+
+      <h2>Loading the data</h2>
+
+        <p>To start, we'll load the tidied TSA data.</p>
+
+        <pre>
+				  <code class="language-r">
+            # Data manipulation and visualization
+            library(readr)
+            library(dplyr)
+            library(ggplot2)
+            # Time series analysis
+            library(tsibble)
+            library(fable)
+            library(feasts)
+            
+            # Read in data
+            df <- read_csv('../data/tsa.csv')
+            df <- df |> as_tsibble(index = Date)
+          </code>
+        </pre>
+
+        <p>The data looks like this after being loaded and converted to a <a href="https://tsibble.tidyverts.org/">tsibble</a>:</p>
+        
+        <pre>
+					<code class="language-r">
+            # A tsibble: 1,212 x 2 [1D]
+              Date       Passengers
+              <date>          <dbl>
+            1 2019-01-05    2345103
+            2 2019-01-06    2202111
+            3 2019-01-07    2150571
+            4 2019-01-08    1975947
+            5 2019-01-09    2229391
+            6 2019-01-10    2044043
+            7 2019-01-11    1733739
+            8 2019-01-12    1739642
+            9 2019-01-13    1955200
+           10 2019-01-14    1959788
+            # ... with 1,202 more rows
+          </code>
+        </pre>
+
+        <p>Our data starts at 2019-01-05, so we're missing the first four days of 2019.</p>
+
+
+      <h2>Reversing the index to forecast back in time</h2>
+
+        <p>We can use <code>fable</code> to create a reasonable forecast to fill in these missing dates.</p>
+
+        <p>First let's plot the original data through February 2020 to see how it looks. We can filter out anything after February 2020 because we don't want to include the Covid pandemic pattern in our forecast model training.</p>
+
+        <pre>
+					<code class="language-r">
+            df |> 
+            filter(Date <= '2020-02-29') |>
+            autoplot()
+          </code>
+        </pre>
+        
+        <img src="original-filtered-plot.png" alt="Plot of original data." class="responsive">     
+        
+        <p>Right now the <code>Date</code> is the index in the <code>tsibble</code>. We'll need to create a new reversed index in order to forecast back in time.</p>
+
+        <p>Below we're using the <a href="https://dplyr.tidyverse.org/reference/ranking.html"><code>dplyr::row_number()</code></a> function to generate row numbers and then using the <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/rev"><code>base::rev()</code></a> function to reverse those numbers. The new field <code>reverse_time</code> shows this new reversed index.</p>
+
+        <pre>
+					<code class="language-r">
+            df |>
+            # Remove Covid impact
+            filter(Date <= '2020-02-29') |>
+            # Create reverse index
+            mutate(reverse_time = rev(row_number()))
+          </code>
+        </pre>
+
+        <pre>
+					<code class="language-r">
+            # A tsibble: 421 x 3 [1D]
+               Date       Passengers reverse_time
+               <date>          <dbl>        <int>
+             1 2019-01-05    2345103          421
+             2 2019-01-06    2202111          420
+             3 2019-01-07    2150571          419
+             4 2019-01-08    1975947          418
+             5 2019-01-09    2229391          417
+             6 2019-01-10    2044043          416
+             7 2019-01-11    1733739          415
+             8 2019-01-12    1739642          414
+             9 2019-01-13    1955200          413
+            10 2019-01-14    1959788          412
+            # ... with 411 more rows
+          </code>
+        </pre>
+       
+        <p>Now we can update our tsibble to use this new <code>reversed_time</code> field as the index. We can do this with the <a href="https://tsibble.tidyverts.org/reference/update_tsibble.html"><code>tsibble::update_tsibble()</code></a> function. Now we see that the <code>reverse_time</code> field is in ascending order and the <code>Date</code> field is reversed.</p>
+
+        <pre>
+					<code class="language-r">
+            df |>
+            # Remove Covid impact
+            filter(Date <= '2020-02-29') |>
+            # Create reverse index
+            mutate(reverse_time = rev(row_number())) |>
+            # Use new reverse index as tsibble index
+            update_tsibble(index = reverse_time)
+          </code>
+        </pre>
+        
+        <pre>
+					<code class="language-r">
+            # A tsibble: 421 x 3 [1]
+               Date       Passengers reverse_time
+               <date>          <dbl>        <int>
+             1 2020-02-29    1949696            1
+             2 2020-02-28    2441643            2
+             3 2020-02-27    2364727            3
+             4 2020-02-26    2075554            4
+             5 2020-02-25    1919803            5
+             6 2020-02-24    2267382            6
+             7 2020-02-23    2380359            7
+             8 2020-02-22    1951535            8
+             9 2020-02-21    2429489            9
+            10 2020-02-20    2358511           10
+            # ... with 411 more rows
+          </code>
+        </pre>
+
+        <p>Let's plot the data again now that the index has been reversed. Comparing to the prior plot above, we can see that we've successfully reversed the data. In the plot below, the beginning (left) is February 2020 and the end (right) is January 2019.</p>
+        <img src="reversed-index-plot.png" alt="Plot of reversed data." class="responsive">
+
+
+      <h2>Forecasting</h2>
+
+        <p>Now we can proceed with creating our forecasts. We'll use the <a href="https://fable.tidyverts.org/reference/ETS.html"><code>fable::ETS()</code></a> and <a href="https://fable.tidyverts.org/reference/ARIMA.html"><code>fable::ARIMA()</code></a> functions for this. We'll then create a third, combined model that averages the output of both the ETS and ARIMA models. Hyndman and Athanasopoulos explain the process of combining forecasts <a href="https://otexts.com/fpp3/combinations.html">here</a> and note that it often improves accuracy. The <code>ETS</code> and <code>ARIMA</code> functions are finding the best fitting models to the data, and we will simply use the chosen model from each without any further scrutiny. Because we're just imputing four days of data, we don't need to spend more time on evaluating the model accuracy.</p>
+
+        <pre>
+					<code class="language-r">
+            df |>
+            # Remove Covid impact
+            filter(Date <= '2020-02-29') |>
+            # Create reverse index
+            mutate(reverse_time = rev(row_number())) |>
+            # Use new reverse index as tsibble index
+            update_tsibble(index = reverse_time) |>
+            # Create ETS and ARIMA models from data
+            model(
+                ets = ETS(Passengers),
+                arima = ARIMA(Passengers, stepwise = FALSE, approximation = FALSE)
+            ) |>
+            # Create combined model from both
+            mutate(combo = (ets + arima) / 2)
+          </code>
+        </pre>
+        
+        <p>This results in the following <a href="https://fabletools.tidyverts.org/reference/mable.html">mable</a> (model table):</p>
+        <img src="forecast-models.png" alt="mable of forecast models." class="responsive">
+        
+        <p>Now if we forecast 4 days using these models (<code>forecast(h = 4)</code>), we'll get the results below. It gives us the forecast distribution and mean for each day for each model.</p>
+        <pre>
+          <code class="language-r">
+            # A fable: 12 x 4 [1]
+            # Key:     .model [3]
+               .model reverse_time          Passengers    .mean
+               <chr>         <dbl>              <dist>    <dbl>
+             1 ets             422   N(2e+06, 5.4e+10) 2041333.
+             2 ets             423   N(2e+06, 5.5e+10) 2041333.
+             3 ets             424   N(2e+06, 5.6e+10) 2041333.
+             4 ets             425   N(2e+06, 5.7e+10) 2041333.
+             5 arima           422   N(2e+06, 3.9e+10) 2021572.
+             6 arima           423 N(2079099, 4.1e+10) 2079099.
+             7 arima           424 N(2173603, 4.1e+10) 2173603.
+             8 arima           425 N(2131355, 4.5e+10) 2131355.
+             9 combo           422   N(2e+06, 4.2e+10) 2031452.
+            10 combo           423 N(2060216, 4.4e+10) 2060216.
+            11 combo           424 N(2107468, 4.5e+10) 2107468.
+            12 combo           425 N(2086344, 4.7e+10) 2086344.
+          </code>
+        </pre>
+                
+        <p>We have our forecasts using the reversed index, but now we need to reverse the index again back to the original <code>Date</code> in order to view these forecasts with the rest of the data. First we'll add a <code>Date</code> field back into our forecast results with <code>mutate(Date = rep(df$Date[1] - c(1:4), 3))</code>.</p>
+        <ul>
+          <li><code>df$Date[1]</code> gives the first date in our dataset: 2019-01-05</li>
+          <li><code>df$Date[1] - c(1:4)</code> subtracts 1, 2, 3, 4 days from our first date and thus gives the missing dates that we're predicting: <code>[1] "2019-01-04" "2019-01-03" "2019-01-02" "2019-01-01"</code></li>
+          <li>We then repeat (<code>rep()</code>) that list of missing dates 3 times because we have results from three models.</li>
+        </ul>
+        
+        <pre>
+					<code class="language-r">
+            df |>
+            # Remove Covid impact
+            filter(Date <= '2020-02-29') |>
+            # Create reverse index
+            mutate(reverse_time = rev(row_number())) |>
+            # Use new reverse index as tsibble index
+            update_tsibble(index = reverse_time) |>
+            # Create ETS and ARIMA models from data
+            model(
+                ets = ETS(Passengers),
+                arima = ARIMA(Passengers, stepwise = FALSE, approximation = FALSE)
+            ) |>
+            # Create combined model from both
+            mutate(combo = (ets + arima) / 2) |>
+            forecast(h = 4) |>
+            # Label newly forecasted data with proper historical dates
+            mutate(Date = rep(df$Date[1] - c(1:4), 3))
+          </code>
+        </pre>
+
+        <p>This adds the correct <code>Date</code> label into our forecast results:</p>
+        <pre>
+					<code class="language-r">
+            # A fable: 12 x 5 [1]
+            # Key:     .model [3]
+               .model reverse_time          Passengers    .mean Date      
+               <chr>         <dbl>              <dist>    <dbl> <date>    
+             1 ets             422   N(2e+06, 5.4e+10) 2041333. 2019-01-04
+             2 ets             423   N(2e+06, 5.5e+10) 2041333. 2019-01-03
+             3 ets             424   N(2e+06, 5.6e+10) 2041333. 2019-01-02
+             4 ets             425   N(2e+06, 5.7e+10) 2041333. 2019-01-01
+             5 arima           422   N(2e+06, 3.9e+10) 2021572. 2019-01-04
+             6 arima           423 N(2079099, 4.1e+10) 2079099. 2019-01-03
+             7 arima           424 N(2173603, 4.1e+10) 2173603. 2019-01-02
+             8 arima           425 N(2131355, 4.5e+10) 2131355. 2019-01-01
+             9 combo           422   N(2e+06, 4.2e+10) 2031452. 2019-01-04
+            10 combo           423 N(2060216, 4.4e+10) 2060216. 2019-01-03
+            11 combo           424 N(2107468, 4.5e+10) 2107468. 2019-01-02
+            12 combo           425 N(2086344, 4.7e+10) 2086344. 2019-01-01
+          </code>
+        </pre>
+        
+        <p>Finally we can reindex these forecast values with <code>fabletools::as_fable()</code>. We specify that the index should be <code>Date</code> and that the response and distribution are <code>Passengers</code>.</p>
+
+        <pre>
+					<code class="language-r">
+            df |>
+            # Remove Covid impact
+            filter(Date <= '2020-02-29') |>
+            # Create reverse index
+            mutate(reverse_time = rev(row_number())) |>
+            # Use new reverse index as tsibble index
+            update_tsibble(index = reverse_time) |>
+            # Create ETS and ARIMA models from data
+            model(
+                ets = ETS(Passengers),
+                arima = ARIMA(Passengers, stepwise = FALSE, approximation = FALSE)
+            ) |>
+            # Create combined model from both
+            mutate(combo = (ets + arima) / 2) |>
+            forecast(h = 4) |>
+            # Label newly forecasted data with proper historical dates
+            mutate(Date = rep(df$Date[1] - c(1:4), 3)) |>
+            # Reindex forecast results to use Date like the original data
+            as_fable(index = Date, response = 'Passengers', distribution = 'Passengers')
+          </code>
+        </pre>
+        
+        <p>We get the results below. This looks very similar to the results we just saw, but now the data is sorted by <code>Date</code> because that is the new index.</p>
+        <pre>
+					<code class="language-r">
+            # A fable: 12 x 5 [1D]
+            # Key:     .model [3]
+               .model reverse_time          Passengers    .mean Date      
+               <chr>         <dbl>              <dist>    <dbl> <date>    
+             1 arima           425 N(2131355, 4.5e+10) 2131355. 2019-01-01
+             2 arima           424 N(2173603, 4.1e+10) 2173603. 2019-01-02
+             3 arima           423 N(2079099, 4.1e+10) 2079099. 2019-01-03
+             4 arima           422   N(2e+06, 3.9e+10) 2021572. 2019-01-04
+             5 combo           425 N(2086344, 4.7e+10) 2086344. 2019-01-01
+             6 combo           424 N(2107468, 4.5e+10) 2107468. 2019-01-02
+             7 combo           423 N(2060216, 4.4e+10) 2060216. 2019-01-03
+             8 combo           422   N(2e+06, 4.2e+10) 2031452. 2019-01-04
+             9 ets             425   N(2e+06, 5.7e+10) 2041333. 2019-01-01
+            10 ets             424   N(2e+06, 5.6e+10) 2041333. 2019-01-02
+            11 ets             423   N(2e+06, 5.5e+10) 2041333. 2019-01-03
+            12 ets             422   N(2e+06, 5.4e+10) 2041333. 2019-01-04
+          </code>
+        </pre>
+          
+        <p>We'll store these forecast results and plot them to see how they compare. The ARIMA model forecast shows daily fluctation while the ETS model forecast is flat.The combo model is just the average of the two, so it's right in the middle.</p>
+        
+        <pre>
+					<code class="language-r">
+            # Plot backcasts with original data
+            autoplot(fcst, df |> filter(Date <= '2019-03-01')) +
+            labs(title = 'Backcasts')
+          </code>
+        </pre>
+        
+        <img src="plot-of-backcasts.png" alt="Plot of backcasts from three different models." class="responsive">
+
+        <p>Given that forecast combinations often outperform individual models, let's use the combination model. We can select the mean values from the combo forecast and append them to our original data so that we have a complete dataset with these missing values filled in.</p>
+        
+        <pre>
+					<code class="language-r">
+            # Combine original data and forecast
+            fcst <- fcst |>
+                filter(.model == 'combo') |>
+                as_tibble() |>
+                select(Date, .mean) |>
+                rename(Passengers = .mean)
+            df <- bind_rows(df, fcst)
+          </code>
+        </pre>
+              
+        <p>Our dataset now has complete data from the beginning of 2019!</p>
+        <pre>
+					<code class="language-r">
+            # A tsibble: 1,216 x 2 [1D]
+               Date       Passengers
+               <date>          <dbl>
+             1 2019-01-01   2086344.
+             2 2019-01-02   2107468.
+             3 2019-01-03   2060216.
+             4 2019-01-04   2031452.
+             5 2019-01-05   2345103 
+             6 2019-01-06   2202111 
+             7 2019-01-07   2150571 
+             8 2019-01-08   1975947 
+             9 2019-01-09   2229391 
+            10 2019-01-10   2044043 
+            # ... with 1,206 more rows
+          </code>
+        </pre>
+    
+
+      <h2>Final code</h2>
+        
+        <p>Now here is the complete code:</p>
+
+        <pre>
+					<code class="language-r">
+            # Data manipulation and visualization
+            library(readr)
+            library(dplyr)
+            library(ggplot2)
+            # Time series analysis
+            library(tsibble)
+            library(fable)
+            library(feasts)
+
+            # Read in data
+            df <- read_csv('../data/tsa.csv')
+            df <- df |> as_tsibble(index = Date)
+
+            # Backcasting
+            fcst <- df |>
+                # Remove Covid impact
+                filter(Date <= '2020-02-29') |>
+                # Create reverse index
+                mutate(reverse_time = rev(row_number())) |>
+                # Use new reverse index as tsibble index
+                update_tsibble(index = reverse_time) |>
+                # Create ETS and ARIMA models from data
+                model(
+                    ets = ETS(Passengers),
+                    arima = ARIMA(Passengers, stepwise = FALSE, approximation = FALSE)
+                    ) |>
+                # Create combined model from both
+                mutate(combo = (ets + arima) / 2) |>
+                forecast(h = 4) |>
+                # Label newly forecasted data with proper historical dates
+                mutate(Date = rep(df$Date[1] - c(1:4), 3)) |>
+                # Reindex forecast results to use Date like the original data
+                as_fable(index = Date, response = 'Passengers', distribution = 'Passengers')
+
+            # Plot backcasts with original data
+            autoplot(fcst, df |> filter(Date <= '2019-03-01')) +
+                labs(title = 'Backcasts')
+
+            # Combine original data and forecast
+            fcst <- fcst |>
+                filter(.model == 'combo') |>
+                as_tibble() |>
+                select(Date, .mean) |>
+                rename(Passengers = .mean)
+            df <- bind_rows(df, fcst)
+
+            # Save data
+            write_csv(df, '../data/tsa-backcast.csv')
+          </code>
+        </pre> 
+
+    <!-- Footer --------------------------------------------------------------->
+    <footer>
+      <a href="https://twitter.com/bbgatch"><img src="../../../images/twitter-logo.png" alt="Twitter logo.", width="30"></a>
+      <a href="https://github.com/bbgatch"><img src="../../../images/github-logo.png" alt="GitHub logo.", width="30"></a>
+      <a href="https://public.tableau.com/app/profile/bbgatch"><img src="../../../images/tableau-logo.png" alt="Tableau logo.", width="30"></a>
+      <a href="https://www.datacamp.com/profile/bbgatch"><img src="../../../images/datacamp-logo.png" alt="DataCamp logo.", width="30"></a>
+      <a href="https://www.kaggle.com/bbgatch"><img src="../../../images/kaggle-logo.png" alt="Kaggle logo.", width="30"></a>
+      <p>This site is hosted on <a href="https://pages.github.com/">GitHub Pages.</a>
+         This font is <a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono.</a></p>
+    </footer>
+    <!-- ------------------------------------------------------------------- -->
+
+  </body>
+
+</html>
