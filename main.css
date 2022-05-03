@@ -8,6 +8,17 @@ body {
     margin: auto;
 }
 
+/* If the width is less than 1000px then add left and right margins.
+This adds margins on mobile, otherwise it goes right to the edge.*/
+@media only screen and (max-width: 1100px) {
+    body {
+      /* 1000 body max-width / 1100 @media max-width = about 91%
+      This makes the transition smooth right at 1100px width.
+      Reference: https://www.w3schools.com/cssref/css3_pr_mediaquery.asp*/
+      max-width: 91vw;
+    }
+  }
+
 h1 {
     font-size: 2.25em;
     font-weight: 800;
