@@ -24,6 +24,3 @@ task = input("What task do you want to track? ")
 print("Starting tracker for: " + task)
 start = time.time()
 log_time()
-
-
-
