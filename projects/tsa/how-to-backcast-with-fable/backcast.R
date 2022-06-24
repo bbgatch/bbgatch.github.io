@@ -45,5 +45,5 @@ fcst <- fcst |>
 df <- bind_rows(df, fcst)
 
 # Save data
-write_csv(df, '../data/tsa-backcast.csv')
+write_csv(df, 'tsa-backcast.csv')
 

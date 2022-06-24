@@ -55,5 +55,5 @@ fcst <- fcst |>
 
 df <- bind_rows(df, fcst)
 autoplot(df)
-write_csv(df, '../data/tsa-forecast.csv')
+write_csv(df, 'tsa-forecast.csv')
 
