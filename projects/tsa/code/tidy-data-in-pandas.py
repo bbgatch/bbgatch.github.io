@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import date, timedelta
-# Some records have null values, need to figure out
+
 df = pd.read_csv('data/tsa-orig.csv')
 
 df['Date'] = pd.to_datetime(df['Date'], format="%m/%d/%Y")
