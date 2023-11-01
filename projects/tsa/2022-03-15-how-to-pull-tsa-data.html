@@ -46,7 +46,7 @@
         Administration began sharing <a href="https://www.tsa.gov/coronavirus/passenger-throughput">TSA security checkpoint passenger throughput numbers.</a></p>
 
       <p>Currently the data looks like this on their site:</p>
-      <img src="images/tsa-site-original-data.png" alt="Original TSA data on the TSA site." class="responsive">
+      <img src="2022-files/images/tsa-site-original-data.png" alt="Original TSA data on the TSA site." class="responsive">
 
       <p>We have daily data with columns for the current and past three years. Based on the way this looks with each prior year in a new column, the prior year data is likely showing TSA checkpoint passengers on the same day of the week in that prior year. In other words, it is day-matched to the same day of the week in the prior years. We'll want to tidy this data, but first we need to get it into Python.</p>
 
@@ -81,7 +81,7 @@
         
         <p>If we now print <code>r</code>, it just shows <code>&lt;Response [200]&gt;</code>, but if we print <code>r.text</code> then it will print the full HTML text of the website. This will print a massive jumble of text to the console, but if you scroll up and look through, you'll notice many <code>tr</code> and <code>td</code> tags along with dates and numbers. That is the data we're trying to get. As <a href="https://towardsdatascience.com/a-guide-to-scraping-html-tables-with-pandas-and-beautifulsoup-7fc24c331cf7">this article</a> explains about half-way through, each row in an HTML table is denoted with the <code>tr</code> ("table row") tag and each data point is denoted with the <code>td</code> ("table data") tag. Here is another helpful reference on <a href="https://www.w3schools.com/html/html_tables.asp">HTML tables.</a></p>
 
-        <img src="images/tsa-site-html-text.png" alt="TSA site HTML text with highlighted components." class="responsive">
+        <img src="2022-files/images/tsa-site-html-text.png" alt="TSA site HTML text with highlighted components." class="responsive">
         
         <p>Thankfully, our trusty friend pandas will do all of the <code>tr</code> and <code>td</code> parsing for us. We can now call <code>pd.read_html(r.text)</code> on the <code>r.text</code> HTML text that we looked through earlier.</p>
         
