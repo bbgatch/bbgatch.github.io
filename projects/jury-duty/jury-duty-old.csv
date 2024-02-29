@@ -1,0 +1,52 @@
+﻿date,day_of_week,no_groups,group_0,group_1,group_2,group_3,group_4,group_5,group_6,group_7,group_8,group_9,group_10,group_11,group_12,complete_excused_data,notes
+1/10/24,Wednesday,,,1,1,1,,,,,,,,,,,
+1/11/24,Thursday,,1,1,1,1,,,,,,,,,,,
+1/12/24,Friday,No Groups,,,,,,,,,,,,,,,
+1/13/24,Saturday,,,,,,,,,,,,,,,,
+1/14/24,Sunday,,,,,,,,,,,,,,,,
+1/15/24,Monday,,,,,,,,,,,,,,,,MLK Day
+1/16/24,Tuesday,,,1,1,1,1,,,,,,,,,,
+1/17/24,Wednesday,,,1,1,1,1,0,0,0,,,,,,Yes,
+1/18/24,Thursday,,,1,1,,,,,,,,,,,,
+1/19/24,Friday,No Groups,,,,,,,,,,,,,,,
+1/20/24,Saturday,,,,,,,,,,,,,,,,
+1/21/24,Sunday,,,,,,,,,,,,,,,,
+1/22/24,Monday,,,1,1,1,1,1,,,,,,,,,
+1/23/24,Tuesday,,,1,1,1,1,0,0,0,0,0,0,,,Yes,
+1/24/24,Wednesday,,,1,1,1,0,0,0,0,0,0,0,0,0,Yes,
+1/25/24,Thursday,,,1,1,1,,,,,,,,,,,
+1/26/24,Friday,No Groups,,,,,,,,,,,,,,,
+1/27/24,Saturday,,,,,,,,,,,,,,,,
+1/28/24,Sunday,,,,,,,,,,,,,,,,
+1/29/24,Monday,,,,,,,,,,,,,,,,Line was busy. IT issue.
+1/30/24,Tuesday,,,,,,,,,,,,,,,,Line was busy. IT issue.
+1/31/24,Wednesday,,,1,1,0,0,0,0,0,0,0,0,0,0,Yes,
+2/1/24,Thursday,,,1,0,0,0,0,0,0,0,0,0,,,Yes,
+2/2/24,Friday,No Groups,,,,,,,,,,,,,,,
+2/3/24,Saturday,,,,,,,,,,,,,,,,
+2/4/24,Sunday,,,,,,,,,,,,,,,,
+2/5/24,Monday,,,1,1,1,1,1,0,0,0,0,,,,Yes,
+2/6/24,Tuesday,,,1,0,0,0,0,0,0,0,0,,,,Yes,
+2/7/24,Wednesday,,,1,0,0,0,0,0,0,0,0,0,,,Yes,
+2/8/24,Thursday,,,1,0,0,0,0,0,0,0,0,0,,,Yes,
+2/9/24,Friday,No Groups,,,,,,,,,,,,,,,
+2/10/24,Saturday,,,,,,,,,,,,,,,,
+2/11/24,Sunday,,,,,,,,,,,,,,,,
+2/12/24,Monday,,,,,,,,,,,,,,,,Call didn't work. Not listed online.
+2/13/24,Tuesday,,,1,0,0,0,0,0,0,0,0,,,,Yes,
+2/14/24,Wednesday,,,1,0,0,0,0,0,0,0,0,0,0,0,Yes,
+2/15/24,Thursday,,,1,0,0,0,0,0,0,0,0,0,,,Yes,
+2/16/24,Friday,No Groups,,,,,,,,,,,,,,,
+2/17/24,Saturday,,,,,,,,,,,,,,,,
+2/18/24,Sunday,,,,,,,,,,,,,,,,
+2/19/24,Monday,,,,,,,,,,,,,,,,Presidents' Day
+2/20/24,Tuesday,,,1,1,1,0,0,0,0,0,0,,,,Yes,
+2/21/24,Wednesday,,,1,1,0,0,0,0,0,0,0,0,0,0,Yes,
+2/22/24,Thursday,,,,,,,,,,,,,,,,Missed on Vacation
+2/23/24,Friday,,,,,,,,,,,,,,,,Missed on Vacation
+2/24/24,Saturday,,,,,,,,,,,,,,,,Missed on Vacation
+2/25/24,Sunday,,,,,,,,,,,,,,,,Missed on Vacation
+2/26/24,Monday,,,1,1,1,1,1,1,0,0,0,,,,Yes,
+2/27/24,Tuesday,,,1,0,0,0,0,0,0,0,0,,,,Yes,
+2/28/24,Wednesday,,,1,0,0,0,0,0,0,0,0,0,0,0,Yes,
+2/29/24,Thursday,,,1,0,0,0,0,0,0,0,0,0,,,Yes,
