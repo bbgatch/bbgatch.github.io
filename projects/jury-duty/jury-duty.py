@@ -1,4 +1,5 @@
 import duckdb
+from datetime import datetime
 
 df = duckdb.read_csv('jury-duty.csv')
 
@@ -7,14 +8,16 @@ sql = """
         group_num
         -- ,datepart('dayofweek', date) as dow
         -- ,dayname(date) as day
-        ,sum(called)
-        ,count(called)
+        ,sum(called) as days_called
+        ,count(called) as days_summoned
         ,sum(called) / count(called) as call_pct
 
     from df
-    where group_num <= 6
     group by 1
     order by 1
 """
 
 duckdb.sql(sql)
+
+min_date = duckdb.sql("select min(date) from df").fetchone()[0].strftime('%Y-%m-%d')
+max_date = duckdb.sql("select max(date) from df").fetchone()[0].strftime('%Y-%m-%d')
