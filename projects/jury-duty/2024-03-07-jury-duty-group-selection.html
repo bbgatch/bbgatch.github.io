@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NT9WF79CCN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NT9WF79CCN');
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Jury duty group selection.">
+    <link href="../../main.css" rel="stylesheet">
+ 
+    <!-- Import highlight.js for code formatting and highlighting. --------- -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- ------------------------------------------------------------------- -->
+
+    <!-- Import font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono">
+
+    <title>bbgatch | Jury Duty Selection</title>
+  </head>
+
+  <body>
+
+    <!-- Navigation bar -->
+    <nav role="navigation" aria-label="Main menu">
+      <ul class="navbar">
+        <li><a href="../../index.html">Home</a></li>
+      </ul>
+    </nav>
+
+
+    <h1>Jury Duty Selection: How likely are you to get called?</h1>
+      <p>A couple months ago I received a jury summons, the third year in a row. Each time it happens, I feel a slight sense of dread due to all the unknowns. Will I have to go in? I won't know until calling in the night before. If I do get called in, will I have to be questioned or just get released? What if I get assigned to a case?!</p>
+
+      <p>I live in Fulton County, Georgia, and jury duty summonses are group-based. The night before a given day that you are summmoned, you call in to find out if your jury duty group needs to show up the next day. It seemed to me that higher group numbers are less likely to be actually called in, and this lead me to want to collect some data to determine how likely each group is to get called in.</p>
+
+      <h2>Setting up the data</h2>
+        <p>The <a href="https://github.com/bbgatch/bbgatch.github.io/blob/main/projects/jury-duty/jury-duty.csv">data</a> is set up by date and group summoned and records whether or not the summoned group is actually called to come in person.</p>
+        <img src="images/jury-duty-data.png">
+
+        <p>I've recorded most days of Fulton County jury duty group calls so far in 2024. The missing days are either weekends, holidays, weekdays where no groups are called, days where it's not clear which groups were summoned but not called, or a handful of days that I missed recording due to vacation.</p>
+
+      <h2>How likely is each group to be called in?</h2>
+        <p>With 20 days of data recorded so far. Group 1 is called in 95% of the time it is summoned. Group 2 is called in 50% of the time it is summoned. Group 3 is called in 30% of the time it is summoned, etc.</p>
+        <a href="https://github.com/bbgatch/bbgatch.github.io/blob/main/projects/jury-duty/jury-duty.py">
+          <img src="images/call-probability-code.png">
+        </a>
+        <img src="images/group-probability.png">
+
+      <p><b>This is still a work in progress.</b> I plan to continue to collect this data throughout the year and will see what else I can do with the data.</p>
+
+    <!-- Footer --------------------------------------------------------------->
+    <footer>
+      <a href="https://twitter.com/bbgatch"><img src="../../images/x-logo.png" alt="Twitter logo.", width="30"></a>
+      <a href="https://github.com/bbgatch"><img src="../../images/github-logo.png" alt="GitHub logo.", width="30"></a>
+      <a href="https://public.tableau.com/app/profile/bbgatch"><img src="../../images/tableau-logo.png" alt="Tableau logo.", width="30"></a>
+      <a href="https://www.datacamp.com/profile/bbgatch"><img src="../../images/datacamp-logo.png" alt="DataCamp logo.", width="30"></a>
+      <a href="https://www.kaggle.com/bbgatch"><img src="../../images/kaggle-logo.png" alt="Kaggle logo.", width="30"></a>
+      <p>This site is hosted on <a href="https://pages.github.com/">GitHub Pages.</a>
+         This font is <a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono.</a></p>
+    </footer>
+    <!-- ------------------------------------------------------------------- -->
+
+  </body>
+
+</html>
