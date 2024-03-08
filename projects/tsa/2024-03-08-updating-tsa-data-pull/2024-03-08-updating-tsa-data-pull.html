@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NT9WF79CCN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NT9WF79CCN');
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TSA passenger number data.">
+    <link href="../../../main.css" rel="stylesheet">
+ 
+    <!-- Import highlight.js for code formatting and highlighting. --------- -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- ------------------------------------------------------------------- -->
+
+    <!-- Import font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono">
+
+    <title>bbgatch | Revisiting TSA Data Pulls</title>
+  </head>
+
+  <body>
+
+    <!-- Navigation bar -->
+    <nav role="navigation" aria-label="Main menu">
+      <ul class="navbar">
+        <li><a href="../../../index.html">Home</a></li>
+      </ul>
+    </nav>
+
+
+    <h1>Revisiting TSA Data Pull with Pandas, DuckDB, and Polars</h1>
+      
+      <p><a href="../2022-03-15-pulling-plotting-tsa-data/2022-03-15-how-to-pull-tsa-data.html">Previously I wrote about</a> how to pull TSA checkpoint data from <a href="https://www.tsa.gov/travel/passenger-volumes">tsa.gov</a>. That approach used the helpful <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_html.html"><code>read_html()</code></a> function from Pandas to pull the raw data, but the blog post didn't go into detail on the additional code needed to tidy the data.</p>
+
+      <p>I wanted to revisit this code to see if I could simplify it and replicate it in <a href="https://duckdb.org">DuckDB</a> and <a href="https://pola.rs">Polars</a>.</p>
+
+
+
+    <!-- Footer --------------------------------------------------------------->
+    <footer>
+      <a href="https://twitter.com/bbgatch"><img src="../../../images/x-logo.png" alt="Twitter logo.", width="30"></a>
+      <a href="https://github.com/bbgatch"><img src="../../../images/github-logo.png" alt="GitHub logo.", width="30"></a>
+      <a href="https://public.tableau.com/app/profile/bbgatch"><img src="../../../images/tableau-logo.png" alt="Tableau logo.", width="30"></a>
+      <a href="https://www.datacamp.com/profile/bbgatch"><img src="../../../images/datacamp-logo.png" alt="DataCamp logo.", width="30"></a>
+      <a href="https://www.kaggle.com/bbgatch"><img src="../../../images/kaggle-logo.png" alt="Kaggle logo.", width="30"></a>
+      <p>This site is hosted on <a href="https://pages.github.com/">GitHub Pages.</a>
+         This font is <a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono.</a></p>
+    </footer>
+    <!-- ------------------------------------------------------------------- -->
+
+  </body>
+
+</html>
