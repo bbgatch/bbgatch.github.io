@@ -41,7 +41,7 @@
 
 
     <h1>Revisiting TSA Data Pull with Pandas, DuckDB, and Polars</h1>
-      
+    <p><i>2024-03-12</i></p>
       <p><a href="../2022-03-15-pulling-plotting-tsa-data/2022-03-15-how-to-pull-tsa-data.html">Previously I wrote about</a> how to pull TSA checkpoint data from <a href="https://www.tsa.gov/travel/passenger-volumes">tsa.gov</a>. That approach used the helpful <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_html.html"><code>read_html()</code></a> function from Pandas to pull the raw data, but the blog post didn't go into detail on the additional code needed to tidy the data.</p>
 
       <p>I wanted to revisit this code to see if I could simplify it and replicate it in <a href="https://duckdb.org">DuckDB</a> and <a href="https://pola.rs">Polars</a>.</p>

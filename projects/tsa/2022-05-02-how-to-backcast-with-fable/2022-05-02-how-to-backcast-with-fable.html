@@ -41,7 +41,8 @@
 
 
     <h1>How to Backcast with the <code>fable</code> Package in R</h1>
-      
+    <p><i>2022-05-02</i></p>
+
       <p>The TSA data that we've pulled starts at 2019-01-05, so we're missing just four days of data. It would be very helpful to have a reasonable estimate for these four days if we want to give a summed number for January or full-year 2019. This is a perfect case where we can use backcasting to impute these missing values.</p>
 
       <p>If you have any interest in forecasting, I highly recommend the <a href="https://fable.tidyverts.org/"><code>fable</code></a> package from Mitchell O'Hara-Wild, the great Rob Hyndman, and Earo Wang. It's the newest iteration of the well-known <code>forecast</code> package, and it plays well with the <a href="https://www.tidyverse.org/">tidyverse</a>. I also recommend the excellent book <a href="https://otexts.com/fpp3/"><cite>Forecasting: Principles and Practice</cite></a> by Rob Hyndman and George Athanasopoulos, which walks through fundamental forecasting principles using <code>fable</code>. <a href="https://otexts.com/fpp3/backcasting.html">In the last chapter of that book</a>, they mention that <code>fable</code> can backcast if we need to predict what prior values were. They give the example code below. Let's walk through this backcasting process and show how we can apply this to our TSA data.</p>
