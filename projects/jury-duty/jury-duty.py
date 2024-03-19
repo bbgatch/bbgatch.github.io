@@ -1,5 +1,4 @@
 import duckdb
-from datetime import datetime
 
 df = duckdb.read_csv('jury-duty.csv')
 
@@ -10,7 +9,7 @@ sql = """
         -- ,dayname(date) as day
         ,sum(called) as days_called
         ,count(called) as days_summoned
-        ,sum(called) / count(called) as call_pct
+        ,cast(round((sum(called) / count(called)) * 100, 2) as string) || '%' as call_pct
 
     from df
     group by 1
