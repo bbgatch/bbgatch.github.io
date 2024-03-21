@@ -41,25 +41,32 @@
 
 
     <h1>Jury Duty Selection: How likely are you to get called?</h1>
-    <p><i>2024-03-19</i></p>
-      <p>A couple months ago I received a jury summons, the third year in a row. Each time it happens, I feel a slight sense of dread due to all the unknowns. Will I have to go in? I won't know until calling in the night before. If I do get called in, will I have to be questioned or just get released? What if I get assigned to a case?!</p>
+    <p><i>2024-03-20</i></p>
+      <p>A couple months ago I received a jury summons, the third year in a row. Each time it happens, I feel a slight sense of dread due to all the unknowns. Will I have to go in? I won't know until calling in the night before. I was assigned to Group 5, which I thought was less likely to be called, but I really wasn't sure how likely. I set about collecting some data to determine my probability of getting called in in the future.</p>
 
-      <p>I live in Fulton County, Georgia, and jury duty summonses are group-based. The night before a given day that you are summmoned, you call in to find out if your jury duty group needs to show up the next day. It seemed to me that higher group numbers are less likely to be actually called in, and this lead me to want to collect some data to determine how likely each group is to get called in.</p>
+      <p>Where I live, jury duty summonses are group-based. The night before a given day that you are summmoned, you call in to find out if your jury duty group needs to show up the next day.</p>
 
       <h2>Setting up the data</h2>
-        <p>The <a href="https://github.com/bbgatch/bbgatch.github.io/blob/main/projects/jury-duty/jury-duty.csv">data</a> is set up by date and group summoned and records whether or not the summoned group is actually called to come in person.</p>
+        <p>I'm a big fan of <a href="https://vita.had.co.nz/papers/tidy-data.pdf">Tidy Data principles</a>, but even after using tidy data principles for years, it's still natural for the mind to gravitate towards a structure that is easier to read, but nonetheless messy.</p>
+
+        <p>Below is the initial data structure I started with. It quickly became apparent that a tidier format would be easier to work with, and I didn't really need to record notes and days when no groups were called.</p>
+        <img src="images/non-tidy-data.png">
+
+
+        <p>After converting to a tidier format, the <a href="https://github.com/bbgatch/bbgatch.github.io/blob/main/projects/jury-duty/jury-duty.csv">data</a> looks like this. There is a record for each day that each group was summoned and a flag that records whether or not the summoned group is actually called to come in person.</p>
         <img src="images/jury-duty-data.png">
 
-        <p>I've recorded most days of Fulton County jury duty group calls so far in 2024. The missing days are either weekends, holidays, weekdays where no groups are called, days where it's not clear which groups were summoned but not called, or a handful of days that I missed recording due to vacation.</p>
+        <p>I've recorded most days that jury duty groups were summoned so far in 2024. The missing dates are weekends, holidays, weekdays where no groups are called, days where it's not clear which groups were summoned but not called, days where the jury services' phone line was down to due IT issues, or (to be honest) days that I missed recording due to vacation 🏖️.</p>
 
       <h2>How likely is each group to be called in?</h2>
+        <p>It turns out my intuition was correct that Group 5 was less likely to be called in!</p>
+        <img src="images/group-probability-table.png">
+        <img src="images/group-probability-plot.png">
         <a href="https://github.com/bbgatch/bbgatch.github.io/blob/main/projects/jury-duty/jury-duty.py">
           <img src="images/call-probability-code.png">
         </a>
-        <img src="images/group-probability-table.png">
-        <img src="images/group-probability-plot.png">
-
-      <p><b>This is still a work in progress.</b> I plan to continue to collect this data throughout the year and will see what else I can do with the data.</p>
+      
+      <p><b>🚧 This is still a work in progress. 🚧</b> I plan to continue to collect this data throughout the year and will see what else I can do with it.</p>
 
     <!-- Footer --------------------------------------------------------------->
     <footer>
