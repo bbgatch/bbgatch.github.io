@@ -28,6 +28,11 @@ h2 {
     font-size: 1.5em;
 }
 
+h3 {
+    /* h3 is normally bold by default, so setting to normal weight. */
+    font-weight: normal;
+}
+
 a {
     color: darkolivegreen;
 }
