@@ -26,4 +26,3 @@ ax.bar_label(ax.containers[0], fmt=lambda x: f"{x * 100:.1f}%")
 ax.set(xlabel="Group Number", ylabel="Call Probability", title="Jury Duty Group Call Probability")
 ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
 plt.savefig('images/group-probability-plot.png')
-
