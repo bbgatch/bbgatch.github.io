@@ -2,44 +2,12 @@
 <html lang="en-US" dir="ltr">
 
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NT9WF79CCN"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-NT9WF79CCN');
-    </script>
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="TSA passenger number data.">
-    <link href="../../../main.css" rel="stylesheet">
- 
-    <!-- Import highlight.js for code formatting and highlighting. --------- -->
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>hljs.highlightAll();</script>
-    <!-- ------------------------------------------------------------------- -->
-
-    <!-- Import font from Google Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono">
-
+    <!-- Header -->
+    <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/header.js"></script>
     <title>bbgatch | Revisiting TSA Data Pulls</title>
   </head>
 
   <body>
-
-    <!-- Navigation bar -->
-    <nav role="navigation" aria-label="Main menu">
-      <ul class="navbar">
-        <li><a href="../../../index.html">Home</a></li>
-      </ul>
-    </nav>
-
-
     <h1>Revisiting TSA Data Pull with Pandas, DuckDB, and Polars</h1>
     <p><i>2024-03-12</i></p>
       <p><a href="../2022-03-15-pulling-plotting-tsa-data/2022-03-15-how-to-pull-tsa-data.html">Previously I wrote about</a> how to pull TSA checkpoint data from <a href="https://www.tsa.gov/travel/passenger-volumes">tsa.gov</a>. That approach used the helpful <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_html.html"><code>read_html()</code></a> function from Pandas to pull the raw data, but the blog post didn't go into detail on the additional code needed to tidy the data.</p>
