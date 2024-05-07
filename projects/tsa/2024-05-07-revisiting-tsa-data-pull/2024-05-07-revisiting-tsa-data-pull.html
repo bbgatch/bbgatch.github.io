@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+    <head>
+        <!-- Header -->
+        <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/header.js"></script>
+        <title>bbgatch | Revisiting TSA Data Pull</title>
+    </head>
+
+    <body>
+        <h1>Revisiting TSA Data Pull</h1>
+            <p><i>2024-05-07</i></p>
+            
+            <p>A couple years back, <a href="../2022-03-15-pulling-plotting-tsa-data/2022-03-15-how-to-pull-tsa-data.html">I wrote about</a> how to pull TSA checkpoint data from <a href="https://www.tsa.gov/travel/passenger-volumes">tsa.gov</a>. I mostly focused on the helpful <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_html.html"><code>read_html()</code></a> function from pandas, and I didn't go into detail on the additional code needed to tidy the data, which is substantial given the way the data was set-up.</p>
+
+            <p>I had been planning to post an updated/simplified version of the tidying code in <a href="https://pandas.pydata.org">pandas</a>, <a href="https://pola.rs">Polars</a> and <a href="https://duckdb.org">DuckDB</a>, but just recently I noticed that the TSA updated their site and simplified the way they're storing this data! This essentially eliminates the need for almost all of the tidying code.</p>
+
+            <p>Now the prior years are each stored on their own respective page and have a simple table of all their daily values.</p>
+            
+            <a href="https://www.tsa.gov/travel/passenger-volumes/2023">
+                <img src="tsa-historical-years.png" alt="Screenshot of Archived Data buttons on TSA.gov." class="responsive">
+            </a>
+            
+            <p>The main page now just shows the current and prior year, with the data matched on the same day of week. This is how the data used to be shown, but it included all years back to 2019. This meant that we had to derive the actual date of each historical number and it meant that we typically were missing a handful of days from history.</p>
+            
+            <a href="https://www.tsa.gov/travel/passenger-volumes">
+                <img src="tsa-site.png" alt="Screenshot of homepage of TSA.gov." class="responsive">
+            </a>
+
+            <p>Pulling and cleaning the data is now just a matter of pulling the table from each page, appending each year together, and ensuring the date is formatted properly.</p>
+            <a href="https://github.com/bbgatch/bbgatch.github.io/blob/main/projects/tsa/2024-05-07-revisiting-tsa-data-pull/pull-tsa-data.py">
+                <img src="pull-tsa-data-code.png" alt="Image of code for pulling TSA data." class="responsive">
+            </a>
+            
+        <!-- Footer -->
+        <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/footer.js"></script>
+
+    </body>
+
+</html>
