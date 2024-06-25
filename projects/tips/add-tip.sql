@@ -1,0 +1,2 @@
+insert into tips (topic, subtopic, date, tip)
+    values ('SQL', 'BigQuery', '2024-06-24', 'If you use backticks around BigQuery table names, it will allow you to cmd + click to open the table information page.');
