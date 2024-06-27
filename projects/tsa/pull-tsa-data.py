@@ -26,8 +26,8 @@ def pull_tsa_data(year, current_year):
         df = df.iloc[:, 0:2]
     
     # Name columns and convert to date
-    df.columns = ['Date', 'Passengers']
-    df['Date'] = pd.to_datetime(df['Date'])
+    df.columns = ['date', 'passengers']
+    df['date'] = pd.to_datetime(df['date'])
     
     print(str(year) + ' data pulled.')
     return df
@@ -46,7 +46,7 @@ for year in years:
     )
 
 df = pd.concat(df_list)
-df = df.sort_values(by='Date')
+df = df.sort_values(by='date')
 
 # Save data
 df.to_csv('tsa.csv', index=False)
