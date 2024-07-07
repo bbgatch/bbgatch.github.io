@@ -48,7 +48,9 @@ for year in years:
 df = pd.concat(df_list)
 df = df.sort_values(by='date')
 
+print('Data pulled ')
+
 # Save data
 df.to_csv('tsa.csv', index=False)
-print('🛫 Data pulled successfully! 🛬')
+print('🛫 Data pulled successfully from ' + str(df['date'].min().date()) + ' to ' + str(df['date'].max().date()) + '! 🛬')
 
