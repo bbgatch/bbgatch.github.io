@@ -43,8 +43,6 @@ prepare_data <- function(){
     return(df)
 }
 
-df <- prepare_data()
-
 train_test_models <- function(df){
     # The models will be more accurate if we ignore pre-Covid
     df <- df |> filter_index("2020-04" ~ .)
@@ -118,15 +116,14 @@ train_test_models <- function(df){
     return(results)
 }
 
-
-forecast_data <- function(df, chosen_model, months_to_forecast){
+forecast_data <- function(df){
     # Forecast data using chosen models
     # The models will be more accurate if we ignore pre-Covid
-    df <- prepare_data() |> filter_index("2020-04" ~ .)
+    df <- df |> filter_index("2020-04" ~ .)
 
     # Find number of months to forecast
     months_to_forecast <- lubridate::interval(
-        ym(max(df$date)) + months(1), ymd('2025-12-01')
+        ym(max(df$date)) + months(1), ymd('2026-01-01')
     ) %/% months(1)
             
     # Forecast with fable
@@ -152,10 +149,7 @@ forecast_data <- function(df, chosen_model, months_to_forecast){
     return(fcst)
 }
 
-
-plot_and_summarize_forecast <- function(fcst, chosen_model){
-    
-    df <- prepare_data()
+plot_and_summarize_forecast <- function(df, fcst){
     fcst <- fcst |>
         as_tibble() |>
         select(date, .mean) |>
@@ -163,7 +157,7 @@ plot_and_summarize_forecast <- function(fcst, chosen_model){
 
     df <- bind_rows(df, fcst)
 
-    # Calculate annual percent change
+    # Calculate annual percent change in TSA Passengers
     results <- df |>
         as_tibble() |>
         mutate(Year = year(date)) |>
@@ -173,11 +167,17 @@ plot_and_summarize_forecast <- function(fcst, chosen_model){
         mutate(pct_chg = percent((passengers / lag(passengers) - 1)))
     print(results)
 
-    # monthly_chg <- df |>
-    #     as_tibble() |>
-    #     mutate(pct_chg = passengers / lag(passengers) - 1)
-    # ggplot(monthly_chg, mapping = aes(x = date, y = pct_chg)) +
-    #     geom_line()
-    # print(results)
-    
+    # Plot monthly year-over-year percent change trend
+    monthly_chg <- df |>
+        as_tibble() |>
+        mutate(pct_chg = passengers / lag(passengers, 12) - 1)
+    ggplot(monthly_chg, mapping = aes(x = date, y = pct_chg)) +
+        geom_line()
+
 }
+
+
+df <- prepare_data()
+train_test_models(df)  # Need to remove extra results print statements
+fcst <- forecast_data(df)
+plot_and_summarize_forecast(df, fcst)
