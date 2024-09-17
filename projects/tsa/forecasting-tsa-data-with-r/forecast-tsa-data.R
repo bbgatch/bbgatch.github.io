@@ -43,13 +43,63 @@ prepare_data <- function(){
     return(df)
 }
 
+stl_decomposition <- function(df){
+    dcmp <- df |>
+        model(stl = STL(passengers))
+    components(dcmp) |> autoplot()
+}
+
+perform_cross_validation <- function(df){
+    df_tr <- df |>
+        filter_index("2020-04" ~ .) |>
+        stretch_tsibble(.init=24, .step=1) |>
+        # We want to test 12 months out, so the latest test set
+        # can only have data through August 2023. This remove the 
+        # last 12 monthly test sets.
+        filter(!(.id %in% tail(unique(.id), 12)))
+    
+    fit <- df_tr |> model(
+        # Baseline models
+        mean = MEAN(passengers),
+        naive = NAIVE(passengers),
+        drift = NAIVE(passengers ~ drift()),
+        snaive = SNAIVE(passengers),
+        
+        # Auto-ARIMA and Auto-ETS models
+        arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
+        ets = ETS(passengers),
+
+        tslm = TSLM(passengers ~ trend() + season()),
+        
+        # Additive error models
+        ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
+        ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
+        ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
+        ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
+        ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
+        ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A'))        
+    )
+    
+    fcst <- fit |>
+        forecast(h = 12)|>
+        group_by(.id, .model) |>
+        mutate(h = row_number()) |>
+        ungroup() |>
+        as_fable(response = "passengers", distribution = passengers)
+    
+    accuracy(fcst, df) |> arrange(RMSE)
+    accuracy(filter(fcst, h == 12), df) |> arrange(RMSE)
+    accuracy(fcst |> group_by(h), df) |> print(n=10000)
+
+}
+
 train_test_models <- function(df){
     # The models will be more accurate if we ignore pre-Covid
     df <- df |> filter_index("2020-04" ~ .)
 
     # Split data into train/test sets
     size_of_data <- nrow(df)
-    size_of_test <- round(size_of_data * 0.2)
+    size_of_test <- round(size_of_data * 0.15)
     train <- df |> slice_head(n = size_of_data - size_of_test)
     test <- df |> slice_tail(n = size_of_test)
     months_to_forecast <- nrow(test)
@@ -78,8 +128,15 @@ train_test_models <- function(df){
     )
     
     fcst <- fit |> forecast(h = months_to_forecast)
-    accuracy(fcst, df) |> arrange(RMSE) |> print(n=100)
+
+    # Save HTML table of initial model results
+    accuracy(fcst, df) |>
+        arrange(RMSE) |>
+        gt() |>
+        as_raw_html() |>
+        writeLines("results-0-initial.html")
     
+    # Create combined models
     fit <- fit |> mutate(
         arima_ets = (arima + ets) / 2,
         arima_ets_ana = (arima + ets_ana) / 2,
@@ -88,10 +145,16 @@ train_test_models <- function(df){
         )
 
     fcst <- fit |> forecast(h = months_to_forecast)
-    accuracy(fcst, df) |> arrange(RMSE) |> print(n=100)
+
+    # Save HTML table of initial model results
+    accuracy(fcst, df) |>
+        arrange(RMSE) |>
+        gt() |>
+        as_raw_html() |>
+        writeLines("results-1-adding-combinations.html")
     
     # Plot results
-    autoplot(fcst, df, level = NULL)
+    # autoplot(fcst, df, level = NULL)
     autoplot(filter(fcst, .model %in% c(
         # 'mean',
         # 'naive',
@@ -107,13 +170,18 @@ train_test_models <- function(df){
         'ets_aaa',
         'ets_aada',
         # 'arima_ets',
-        'arima_ets_ana'
-        # 'arima_ets_aada'
+        'arima_ets_ana',
+        'arima_ets_aada'
         # 'arima_ets_aaa'
-    )), df, level = NULL)
+    )), df, level = NULL) +
+        ggtitle("Top Forecast Models by RMSE on TSA Passenger Test Data") +
+        scale_y_continuous(
+            name="Passengers",
+            labels=label_number(scale_cut = cut_short_scale())
+        ) +
+        theme(axis.title.x = element_blank())
+    ggsave("images/top-forecast-models.png", width=16.18, height=10, units='cm')
 
-    results <- accuracy(fcst, df) |> arrange(RMSE)
-    return(results)
 }
 
 forecast_data <- function(df){
@@ -129,10 +197,11 @@ forecast_data <- function(df){
     # Forecast with fable
     fit <- df |> model(
       arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
-    #   ets = ETS(passengers),
+      ets = ETS(passengers),
       ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
+    #   ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
     ) |> mutate(
-    #   arima_ets = (arima + ets) / 2,
+      arima_ets = (arima + ets) / 2,
       arima_ets_ana = (arima + ets_ana) / 2
     )
     
@@ -142,9 +211,9 @@ forecast_data <- function(df){
     autoplot(fcst, df)
     autoplot(fcst, df, level = NULL)
     autoplot(filter(fcst, .model %in% c('arima_ets_ana')), df)
-    autoplot(filter(fcst, .model %in% c('arima_ets_ana')), df, level = NULL)
+    autoplot(filter(fcst, .model %in% c('arima_ets', 'arima_ets_ana')), df, level = NULL)
     
-    fcst <- fcst |> filter(.model == 'arima_ets_ana')
+    fcst <- fcst |> filter(.model == 'arima_ets')
     
     return(fcst)
 }
@@ -176,8 +245,8 @@ plot_and_summarize_forecast <- function(df, fcst){
 
 }
 
-
+# Run code
 df <- prepare_data()
-train_test_models(df)  # Need to remove extra results print statements
+train_test_models(df)
 fcst <- forecast_data(df)
 plot_and_summarize_forecast(df, fcst)
