@@ -43,56 +43,22 @@ prepare_data <- function(){
     return(df)
 }
 
+
+# Time series decomposition
 stl_decomposition <- function(df){
     dcmp <- df |>
         model(stl = STL(passengers))
-    components(dcmp) |> autoplot()
+    components(dcmp) |>
+        autoplot() +
+        scale_y_continuous(
+            name="Passengers",
+            labels=label_number(scale_cut = cut_short_scale())
+        )
+    ggsave("images/time-series-decomposition.png", width=16.18, height=10, units='cm')
 }
 
-perform_cross_validation <- function(df){
-    df_tr <- df |>
-        filter_index("2020-04" ~ .) |>
-        stretch_tsibble(.init=24, .step=1) |>
-        # We want to test 12 months out, so the latest test set
-        # can only have data through August 2023. This remove the 
-        # last 12 monthly test sets.
-        filter(!(.id %in% tail(unique(.id), 12)))
-    
-    fit <- df_tr |> model(
-        # Baseline models
-        mean = MEAN(passengers),
-        naive = NAIVE(passengers),
-        drift = NAIVE(passengers ~ drift()),
-        snaive = SNAIVE(passengers),
-        
-        # Auto-ARIMA and Auto-ETS models
-        arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
-        ets = ETS(passengers),
 
-        tslm = TSLM(passengers ~ trend() + season()),
-        
-        # Additive error models
-        ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
-        ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
-        ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
-        ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
-        ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
-        ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A'))        
-    )
-    
-    fcst <- fit |>
-        forecast(h = 12)|>
-        group_by(.id, .model) |>
-        mutate(h = row_number()) |>
-        ungroup() |>
-        as_fable(response = "passengers", distribution = passengers)
-    
-    accuracy(fcst, df) |> arrange(RMSE)
-    accuracy(filter(fcst, h == 12), df) |> arrange(RMSE)
-    accuracy(fcst |> group_by(h), df) |> print(n=10000)
-
-}
-
+# Compare models using train test split
 train_test_models <- function(df){
     # The models will be more accurate if we ignore pre-Covid
     df <- df |> filter_index("2020-04" ~ .)
@@ -114,17 +80,21 @@ train_test_models <- function(df){
         
         # Auto-ARIMA and Auto-ETS models
         arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
-        ets = ETS(passengers),
+        # ets = ETS(passengers),
 
         tslm = TSLM(passengers ~ trend() + season()),
         
         # Additive error models
-        ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
-        ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
-        ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
-        ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
+        # ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
+        # ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
+        # ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
+        # ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
         ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
-        ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A'))        
+        ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
+
+        ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
+        ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))
+
     )
     
     fcst <- fit |> forecast(h = months_to_forecast)
@@ -138,10 +108,13 @@ train_test_models <- function(df){
     
     # Create combined models
     fit <- fit |> mutate(
-        arima_ets = (arima + ets) / 2,
-        arima_ets_ana = (arima + ets_ana) / 2,
+        # arima_ets = (arima + ets) / 2,
+        
+        arima_ets_aaa = (arima + ets_aaa) / 2,
         arima_ets_aada = (arima + ets_aada) / 2,
-        arima_ets_aaa = (arima + ets_aaa) / 2
+        
+        arima_ets_aam = (arima + ets_aam) / 2,
+        arima_ets_aadm = (arima + ets_aadm) / 2
         )
 
     fcst <- fit |> forecast(h = months_to_forecast)
@@ -180,10 +153,97 @@ train_test_models <- function(df){
             labels=label_number(scale_cut = cut_short_scale())
         ) +
         theme(axis.title.x = element_blank())
-    ggsave("images/top-forecast-models.png", width=16.18, height=10, units='cm')
+    ggsave("images/train-test-top-forecast-models.png", width=16.18, height=10, units='cm')
+}
+
+
+# Compare models using cross validation
+perform_cross_validation <- function(df){
+    df_tr <- df |>
+        filter_index("2020-04" ~ .) |>
+        stretch_tsibble(.init=24, .step=1) |>
+        # We want to test 12 months out, so the latest test set
+        # can only have data through August 2023. This remove the 
+        # last 12 monthly test sets.
+        filter(!(.id %in% tail(unique(.id), 12)))
+    
+    fit <- df_tr |> model(
+        # Baseline models
+        mean = MEAN(passengers),
+        naive = NAIVE(passengers),
+        drift = NAIVE(passengers ~ drift()),
+        snaive = SNAIVE(passengers),
+        
+        # Auto-ARIMA and Auto-ETS models
+        arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
+        # ets = ETS(passengers),
+
+        tslm = TSLM(passengers ~ trend() + season()),
+        
+        # Additive error models
+        # ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
+        # ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
+        # ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
+        # ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
+        ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
+        ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
+        # ets_anm = ETS(passengers ~ error('A') + trend('N') + season('M')),
+        ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
+        ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))        
+    ) |> mutate(
+        arima_ets_aaa = (arima + ets_aaa) / 2,
+        arima_ets_aada = (arima + ets_aada) / 2,
+        arima_ets_aam = (arima + ets_aam) / 2,
+        arima_ets_aadm = (arima + ets_aadm) / 2
+        # # arima_ets = (arima + ets) / 2,
+        # arima_ets_ann = (arima + ets_ann) / 2,
+        # arima_ets_aan = (arima + ets_aan) / 2,
+        # arima_ets_aadn = (arima + ets_aadn) / 2,
+        # arima_ets_ana = (arima + ets_ana) / 2,
+    )
+
+    fcst <- fit |>
+        forecast(h = 12)|>
+        group_by(.id, .model) |>
+        mutate(h = row_number()) |>
+        ungroup() |>
+        as_fable(response = "passengers", distribution = passengers)
+    
+    accuracy(fcst, df) |> arrange(RMSE)
+    accuracy(filter(fcst, h == 12), df) |> arrange(RMSE)
+    accuracy(fcst |> group_by(h), df) |> print(n=10000)
+    
+    # Plot forecast accuracy by months out
+    accuracy(fcst |> group_by(h), df) |>
+        filter(!(.model %in% c(
+            'drift',
+            'mean',
+            'naive',
+            'snaive',
+            'tslm'
+        ))) |>
+        ggplot(mapping = aes(x = h, y = RMSE, color = .model)) +
+        geom_line() +
+        labs(
+            title = "TSA Passenger History",
+            x = "Forecast RMSE N Months Out"
+        ) +
+        scale_y_continuous(
+            name="RMSE",
+            labels=label_number(scale_cut = cut_short_scale())
+        ) +
+        scale_x_continuous(
+            breaks = seq(1, 12)
+            # breaks=breaks_pretty()
+        ) +
+        theme(panel.grid.minor = element_blank())
+        
+    ggsave("images/cross-validation-forecast-error.png", width=16.18, height=10, units='cm')
 
 }
 
+
+# Forecast data using chosen model
 forecast_data <- function(df){
     # Forecast data using chosen models
     # The models will be more accurate if we ignore pre-Covid
@@ -196,21 +256,34 @@ forecast_data <- function(df){
             
     # Forecast with fable
     fit <- df |> model(
-      arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
-      ets = ETS(passengers),
-      ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
-    #   ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
+        arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
+        # ets = ETS(passengers),
+        # ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
+        # ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
+        # ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
+        # ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
+        ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
+        ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
+        # ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
+        # ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))
     ) |> mutate(
-      arima_ets = (arima + ets) / 2,
-      arima_ets_ana = (arima + ets_ana) / 2
+      arima_ets_aaa = (arima + ets_aaa) / 2,
+      arima_ets_aada = (arima + ets_aada) / 2
     )
     
     fcst <- fit |> forecast(h = months_to_forecast)
+    # fcst <- fit |> forecast(h = 40)
     
     # Plot results
     autoplot(fcst, df)
     autoplot(fcst, df, level = NULL)
-    autoplot(filter(fcst, .model %in% c('arima_ets_ana')), df)
+    autoplot(filter(fcst, .model %in% c(
+        'ets_aaa',
+        'ets_aada'
+        # 'ets_aam',
+        # 'ets_aadm'
+    )), df, level=NULL)
+    autoplot(filter(fcst, .model %in% c('arima_ets_aada')), df)
     autoplot(filter(fcst, .model %in% c('arima_ets', 'arima_ets_ana')), df, level = NULL)
     
     fcst <- fcst |> filter(.model == 'arima_ets')
@@ -218,6 +291,8 @@ forecast_data <- function(df){
     return(fcst)
 }
 
+
+# Calculate annual percent change and plot monthly YoY percent change
 plot_and_summarize_forecast <- function(df, fcst){
     fcst <- fcst |>
         as_tibble() |>
@@ -247,6 +322,7 @@ plot_and_summarize_forecast <- function(df, fcst){
 
 # Run code
 df <- prepare_data()
+stl_decomposition(df)
 train_test_models(df)
 fcst <- forecast_data(df)
 plot_and_summarize_forecast(df, fcst)

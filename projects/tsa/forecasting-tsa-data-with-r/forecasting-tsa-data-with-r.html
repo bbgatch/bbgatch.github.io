@@ -9,18 +9,32 @@
 
     <body>
         <h1>Forecasting TSA Data with R</h1>
-            <p><i>2024-09-20</i></p>
+            <p><i>2024-09-27</i></p>
             
             <p>If we want to create a forecast in R for the TSA Passenger data to predict passenger volumes in the future, we can use the <a href="https://tidyverts.org">tidyverts packages</a> `fable`, `tsibble`, and `feasts`.</p>
 
-            <p>These packages apply <a href="https://r4ds.had.co.nz/tidy-data.html">tidy data principles</a> to time series data and forecasting. These packages were coauthored by the forecasting great <a href="https://robjhyndman.com">Rob Hyndman</a>, and his fantastic textbook <a href="https://otexts.com/fpp3/">Forecasting: Principles and Practice (3rd Edition)</a> uses these packages and workflows.</p>
+            <p>These packages apply <a href="https://r4ds.had.co.nz/tidy-data.html">tidy data principles</a> to time series data and forecasting. They were coauthored by the forecasting great <a href="https://robjhyndman.com">Rob Hyndman</a>, and his fantastic textbook <a href="https://otexts.com/fpp3/">Forecasting: Principles and Practice (3rd Edition)</a> uses these packages and workflows.</p>
             
-            <h2></h2>
+            <h2>Plotting and Decomposing the History</h2>
+                <p></p>
+                <img src="images/tsa-passenger-history.png" alt="Line plot of TSA Passenger History." class="responsive" width="80%">
+                
+                <img src="images/time-series-decomposition.png" alt="Line plots decomposing TSA Passenger History time series into trend, seasonality, and remainder components." class="responsive" width="80%">
+                
+            <h2>Evaluating Models with a Traditional Train/Test Split</h2>
+                <p></p>
+                <center><embed src="results-0-initial.html" width="250" height="550"></center>
+                <center><embed src="results-1-adding-combinations.html" width="250" height="550"></center>
+                <img src="images/train-test-top-forecast-models.png" alt="Line plot showing performance of top forecast models." class="responsive" width="80%">
+                
+            <h2>Evaluating Models with Cross Validation</h2>
+                <p></p>
+                <img src="images/cross-validation-forecast-error.png" alt="" class="responsive" width="80%">
+            
+            <h2>Final Forecast</h2>
                 <p></p>
             
-            <h2></h2>
-                <p></p>
-                <img src="images/" alt="" class="responsive" width="80%">
+            
             
                          
             <h2>Conclusions</h2>
