@@ -16,15 +16,15 @@
             <p>These packages apply <a href="https://r4ds.had.co.nz/tidy-data.html">tidy data principles</a> to time series data and forecasting. They were coauthored by the forecasting great <a href="https://robjhyndman.com">Rob Hyndman</a>, and his fantastic textbook <a href="https://otexts.com/fpp3/">Forecasting: Principles and Practice (3rd Edition)</a> uses these packages and workflows.</p>
             
             <h2>Plotting and Decomposing the History</h2>
-                <p></p>
+                <p>The historical TSA Passenger data that we have looks like this:</p>
                 <img src="images/tsa-passenger-history.png" alt="Line plot of TSA Passenger History." class="responsive" width="80%">
                 
+                <p>There is clear seasonality throughout history, and there has been an upward trend coming out of the Covid downturn.</p>
                 <img src="images/time-series-decomposition.png" alt="Line plots decomposing TSA Passenger History time series into trend, seasonality, and remainder components." class="responsive" width="80%">
                 
             <h2>Evaluating Models with a Traditional Train/Test Split</h2>
-                <p></p>
-                <center><embed src="results-0-initial.html" width="250" height="550"></center>
-                <center><embed src="results-1-adding-combinations.html" width="250" height="550"></center>
+                <p>The <code>fable</code> package provides several time series models to choose from. We can evaluate which perform the best by breaking out data into separate train/test sets.</p>
+                <center><embed src="train-test-split-accuracy.html" width="1000" height="550"></center>
                 <img src="images/train-test-top-forecast-models.png" alt="Line plot showing performance of top forecast models." class="responsive" width="80%">
                 
             <h2>Evaluating Models with Cross Validation</h2>

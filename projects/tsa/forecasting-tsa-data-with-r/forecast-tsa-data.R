@@ -94,20 +94,8 @@ train_test_models <- function(df){
 
         ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
         ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))
-
-    )
-    
-    fcst <- fit |> forecast(h = months_to_forecast)
-
-    # Save HTML table of initial model results
-    accuracy(fcst, df) |>
-        arrange(RMSE) |>
-        gt() |>
-        as_raw_html() |>
-        writeLines("results-0-initial.html")
-    
     # Create combined models
-    fit <- fit |> mutate(
+    ) |> mutate(
         # arima_ets = (arima + ets) / 2,
         
         arima_ets_aaa = (arima + ets_aaa) / 2,
@@ -115,37 +103,26 @@ train_test_models <- function(df){
         
         arima_ets_aam = (arima + ets_aam) / 2,
         arima_ets_aadm = (arima + ets_aadm) / 2
-        )
-
+    )
+    
+    # Generate forecasts
     fcst <- fit |> forecast(h = months_to_forecast)
-
-    # Save HTML table of initial model results
+    
+    # Save HTML table of model results
     accuracy(fcst, df) |>
         arrange(RMSE) |>
         gt() |>
         as_raw_html() |>
-        writeLines("results-1-adding-combinations.html")
+        writeLines("train-test-split-accuracy.html")
     
     # Plot results
     # autoplot(fcst, df, level = NULL)
     autoplot(filter(fcst, .model %in% c(
-        # 'mean',
-        # 'naive',
-        # 'drift',
-        # 'snaive',
         'arima',
-        'ets',
-        # 'tslm',
-        # 'ets_ann',
-        # 'ets_aan',
-        # 'ets_aadn',
-        'ets_ana',
         'ets_aaa',
         'ets_aada',
-        # 'arima_ets',
-        'arima_ets_ana',
+        'arima_ets_aaa',
         'arima_ets_aada'
-        # 'arima_ets_aaa'
     )), df, level = NULL) +
         ggtitle("Top Forecast Models by RMSE on TSA Passenger Test Data") +
         scale_y_continuous(
