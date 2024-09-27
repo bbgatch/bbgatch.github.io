@@ -110,10 +110,10 @@ train_test_models <- function(df){
     
     # Save HTML table of model results
     accuracy(fcst, df) |>
-        arrange(RMSE) |>
-        gt() |>
-        as_raw_html() |>
-        writeLines("train-test-split-accuracy.html")
+        arrange(RMSE) # |>
+        # gt() |>
+        # as_raw_html() |>
+        # writeLines("train-test-split-accuracy.html")
     
     # Plot results
     # autoplot(fcst, df, level = NULL)
@@ -164,14 +164,16 @@ perform_cross_validation <- function(df){
         # ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
         ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
         ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
-        # ets_anm = ETS(passengers ~ error('A') + trend('N') + season('M')),
-        ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
-        ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))        
+        
+        # # ets_anm = ETS(passengers ~ error('A') + trend('N') + season('M')),
+        # ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
+        # ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))        
+    
     ) |> mutate(
         arima_ets_aaa = (arima + ets_aaa) / 2,
         arima_ets_aada = (arima + ets_aada) / 2,
-        arima_ets_aam = (arima + ets_aam) / 2,
-        arima_ets_aadm = (arima + ets_aadm) / 2
+        # arima_ets_aam = (arima + ets_aam) / 2,
+        # arima_ets_aadm = (arima + ets_aadm) / 2
         # # arima_ets = (arima + ets) / 2,
         # arima_ets_ann = (arima + ets_ann) / 2,
         # arima_ets_aan = (arima + ets_aan) / 2,
@@ -239,12 +241,14 @@ forecast_data <- function(df){
         # ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
         # ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
         # ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
-        ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
+    
+        # ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
         ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
+    
         # ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
         # ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))
     ) |> mutate(
-      arima_ets_aaa = (arima + ets_aaa) / 2,
+    #   arima_ets_aaa = (arima + ets_aaa) / 2,
       arima_ets_aada = (arima + ets_aada) / 2
     )
     
@@ -254,16 +258,9 @@ forecast_data <- function(df){
     # Plot results
     autoplot(fcst, df)
     autoplot(fcst, df, level = NULL)
-    autoplot(filter(fcst, .model %in% c(
-        'ets_aaa',
-        'ets_aada'
-        # 'ets_aam',
-        # 'ets_aadm'
-    )), df, level=NULL)
     autoplot(filter(fcst, .model %in% c('arima_ets_aada')), df)
-    autoplot(filter(fcst, .model %in% c('arima_ets', 'arima_ets_ana')), df, level = NULL)
     
-    fcst <- fcst |> filter(.model == 'arima_ets')
+    fcst <- fcst |> filter(.model == 'arima_ets_aada')
     
     return(fcst)
 }
