@@ -77,40 +77,35 @@ train_test_models <- function(df){
         naive = NAIVE(passengers),
         drift = NAIVE(passengers ~ drift()),
         snaive = SNAIVE(passengers),
+        # tslm = TSLM(passengers ~ trend() + season()),
         
         # Auto-ARIMA and Auto-ETS models
         arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
-        # ets = ETS(passengers),
+        ets = ETS(passengers),
 
-        tslm = TSLM(passengers ~ trend() + season()),
-        
-        # Additive error models
-        # ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
-        # ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
-        # ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
-        # ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
+        # Specify ETS models
         ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
         ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
-
         ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
         ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))
-    # Create combined models
-    ) |> mutate(
-        # arima_ets = (arima + ets) / 2,
-        
-        arima_ets_aaa = (arima + ets_aaa) / 2,
-        arima_ets_aada = (arima + ets_aada) / 2,
-        
-        arima_ets_aam = (arima + ets_aam) / 2,
-        arima_ets_aadm = (arima + ets_aadm) / 2
     )
-    
     # Generate forecasts
     fcst <- fit |> forecast(h = months_to_forecast)
     
-    # Save HTML table of model results
+    # View model forecast accuracy against test set
+    accuracy(fcst, df) |>
+        arrange(RMSE)
+
+    # Create combined models
+    fcst <- fit |> mutate(
+        arima_ets_aaa = (arima + ets_aaa) / 2,
+        arima_ets_aada = (arima + ets_aada) / 2,
+    ) |> forecast(h = months_to_forecast)
+       
+    # View model forecast accuracy against test set
     accuracy(fcst, df) |>
         arrange(RMSE) # |>
+    # Save HTML table of model results
         # gt() |>
         # as_raw_html() |>
         # writeLines("train-test-split-accuracy.html")
