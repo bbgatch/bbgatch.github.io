@@ -9,12 +9,12 @@
 
     <body>
         <h1>Forecasting TSA Data with R</h1>
-            <p><i>2024-09-27</i></p>
+            <p><i>2024-10-05</i></p>
             
         <!-- TODO:
-            Show the results of just ARIMA and ETS first and then show how adding combined improves results.
-            Check alt text
-
+            - Finish the final forecast and summarize functions.
+            - Create plots showing ARIMA/ETS final forecasts and final plot with intervals
+            - Check alt text
         -->
 
             <p>If we want to create a forecast in R for the TSA Passenger data to predict passenger volumes in the future, we can use the <a href="https://tidyverts.org">tidyverts packages</a> `fable`, `tsibble`, and `feasts`.</p>
@@ -88,15 +88,22 @@
                 <p>Based on these results, I would pick either the <code>arima</code> or the <code>arima_ets_aada</code> model. While the <code>arima</code> model is more accurate compared to the test set, over the long term I would probably prefer to use an ensemble model.</p>
                 
             <h2>Evaluating Models with Cross Validation</h2>
-                <p>Another approach to time series model evaluation is <a href="https://otexts.com/fpp3/tscv.html">cross validation</a>. This is a little different from cross validation you may have used in other machine learning contexts. With time series data, we start with an initial base set of historical data, fit our models, calculate forecasts, and measure accuracy. We then repeat adding one (or more) data point to the base historical data, repeating the model fitting, forecasting, and testing for each step with. In each step we're forecasting one or more steps out. Prof. Hyndman uses this visualization in his textbook</p>
+                <p>Another approach to time series model evaluation is <a href="https://otexts.com/fpp3/tscv.html">cross validation</a>. This is a little different from cross validation you may have used in other machine learning contexts. With time series data, we start with an initial base set of only <i>n</i> historical data points, fit our models, calculate forecasts, and measure accuracy. We then repeat the process by adding one additional data point (or more) to the base set of historical data with each step, fit the moels, forecast, and measure accuracy. In each iteration we're forecasting one or more steps out. Prof. Hyndman uses this visualization in his textbook to help explain the process:</p>
+
                 <img src="images/fpp3-cross-validation.png" alt="" class="responsive" width="80%">
                 
-                <p>One neat benefit of this approach, is that we can see the average model accuracy across all of the CV sets at 1 to 12 steps out. As we'd expect, model accuracy gets worse the further out we try to forecast. We can see that the best performing model across the CV sets is the ETS(A, Ad, A) model, and the second best is the combination of ARIMA and ETS(A, Ad, A).</p>
+                <p>One neat benefit of this approach is that if we're forecasting more than one step ahead in each iteration we can see the average model accuracy across all of the CV sets at 1 to <i>n</i> steps out. As we'd expect, model accuracy gets worse the further out we try to forecast. We can see that the best performing model across the CV sets is the ETS(A, Ad, A) model, and the second best is the combination of ARIMA and ETS(A, Ad, A).</p>
                 <img src="images/cross-validation-forecast-error.png" alt="" class="responsive" width="80%">
-            
+                
+                <p>The total model accuracy across all CV steps and forecast periods is below. It's also possible to calculate the accuracy just for <i>n</i> specific forecast steps out.</p>
+
+                <img src="images/cross-validation-model-accuracy.png" alt="" class="responsive" width="80%">
+
             <h2>Final Forecast</h2>
-                <p></p>           
-                         
+                <p>Based on what we've seen by evaluating different models with a train/test split and cross-validation, we know that the ARIMA and ETS(A, Ad, A) models tend to perform the best, along with the combination of the two. The train/test split method put ARIMA at the top, but cross validation put ETS(A, Ad, A) at the top. Ultimately, I would choose the combination of the two so that we can hopefully gain from the benefits of ensembling.</p>
+
+                <img src="images/tsa-passenger-forecast.png" alt="" class="responsive" width="80%">
+
             <h2>Conclusions</h2>
                 <p></p>
             

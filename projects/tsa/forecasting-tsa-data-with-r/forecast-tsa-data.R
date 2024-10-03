@@ -133,6 +133,7 @@ train_test_models <- function(df){
 perform_cross_validation <- function(df){
     df_tr <- df |>
         filter_index("2020-04" ~ .) |>
+        # We need at least two years of data in order to fit the seasonal ETS models
         stretch_tsibble(.init=24, .step=1) |>
         # We want to test 12 months out, so the latest test set
         # can only have data through August 2023. This remove the 
@@ -145,13 +146,12 @@ perform_cross_validation <- function(df){
         naive = NAIVE(passengers),
         drift = NAIVE(passengers ~ drift()),
         snaive = SNAIVE(passengers),
+        # tslm = TSLM(passengers ~ trend() + season()),
         
         # Auto-ARIMA and Auto-ETS models
         arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
         # ets = ETS(passengers),
 
-        tslm = TSLM(passengers ~ trend() + season()),
-        
         # Additive error models
         # ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
         # ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
@@ -185,7 +185,8 @@ perform_cross_validation <- function(df){
     
     accuracy(fcst, df) |> arrange(RMSE)
     accuracy(filter(fcst, h == 12), df) |> arrange(RMSE)
-    accuracy(fcst |> group_by(h), df) |> print(n=10000)
+    accuracy(filter(fcst, h == 1), df) |> arrange(RMSE)
+    # accuracy(fcst |> group_by(h), df) |> print(n=10000)
     
     # Plot forecast accuracy by months out
     accuracy(fcst |> group_by(h), df) |>
@@ -254,9 +255,19 @@ forecast_data <- function(df){
     autoplot(fcst, df)
     autoplot(fcst, df, level = NULL)
     autoplot(filter(fcst, .model %in% c('arima_ets_aada')), df)
-    
+
     fcst <- fcst |> filter(.model == 'arima_ets_aada')
     
+    # Plot results
+    autoplot(fcst, df, level = NULL) +
+        ggtitle("TSA Passenger Forecast | Combination ARIMA + ETS(A, Ad, A) Model") +
+        scale_y_continuous(
+            name="Passengers",
+            labels=label_number(scale_cut = cut_short_scale())
+        ) +
+        theme(axis.title.x = element_blank())
+    ggsave("images/tsa-passenger-forecast.png", width=16.18, height=10, units='cm')
+       
     return(fcst)
 }
 
