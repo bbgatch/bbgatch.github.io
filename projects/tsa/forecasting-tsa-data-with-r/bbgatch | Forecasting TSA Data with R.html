@@ -59,7 +59,7 @@
                 
                 <p>Thankfully our ARIMA and ETS model do outperform our baselines. The <code>arima</code> model performs the best and <code>ets_aada</code> is second. The models with multiplicative seasonality don't perform as well and actually underperform some of our baselines.</p>
                 
-                <p>One nice feature of <code><a href="https://fable.tidyverts.org">fable</a></code> is that it makes it very easy to <a href="https://otexts.com/fpp3/combinations.html">combine or ensemble multiple forecast models.</a> Hyndman and Athanasopoulos describe this as such:</p>
+                <p>One cool feature of <code><a href="https://fable.tidyverts.org">fable</a></code> is that it makes it very easy to <a href="https://otexts.com/fpp3/combinations.html">combine or ensemble multiple forecast models.</a> Hyndman and Athanasopoulos describe this as such:</p>
 
                 <blockquote class="highlighted">"The results have been virtually unanimous: combining multiple forecasts leads to increased forecast accuracy. In many cases one can make dramatic performance improvements by simply averaging the forecasts."</blockquote>
 
@@ -125,20 +125,7 @@
                 </code></pre>
 
                 <img src="images/final-forecast-annual-change.png" alt="" class="responsive" width="30%">
-
-                <!-- <embed src="output.html">
-                <embed src="output.html" width="250" height="550">
-                <center><embed src="output.html" width="250" height="550"></center> -->
                 
-                <!-- <div id="output"></div>
-                <script>
-                    fetch('output.html')
-                        .then(response => response.text())
-                        .then(data => {
-                            document.getElementById('output').innerHTML = data;
-                        });
-                </script> -->
-
                 <p>The forecast is showing 2024 will finish the year up +4.9% and 2025 will growth +3.8%. This looks entirely reasonable.</p>
             
             <a href="https://github.com/bbgatch/bbgatch.github.io/blob/main/projects/tsa/forecasting-tsa-data-with-r/forecast-tsa-data.R">

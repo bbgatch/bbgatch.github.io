@@ -219,9 +219,10 @@ perform_cross_validation <- function(df){
 
 
 # Forecast data using chosen model
-forecast_data <- function(df){
+final_forecast <- function(df){
     # Forecast data using chosen models
     # The models will be more accurate if we ignore pre-Covid
+    df_hist <- df
     df <- df |> filter_index("2020-04" ~ .)
 
     # Find number of months to forecast
@@ -232,48 +233,40 @@ forecast_data <- function(df){
     # Forecast with fable
     fit <- df |> model(
         arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
-        # ets = ETS(passengers),
-        # ets_ann = ETS(passengers ~ error('A') + trend('N') + season('N')),
-        # ets_aan = ETS(passengers ~ error('A') + trend('A') + season('N')),
-        # ets_aadn = ETS(passengers ~ error('A') + trend('Ad') + season('N')),
-        # ets_ana = ETS(passengers ~ error('A') + trend('N') + season('A')),
-    
-        # ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
         ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
-    
-        # ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
-        # ets_aadm = ETS(passengers ~ error('A') + trend('Ad') + season('M'))
     ) |> mutate(
-    #   arima_ets_aaa = (arima + ets_aaa) / 2,
       arima_ets_aada = (arima + ets_aada) / 2
     )
     
     fcst <- fit |> forecast(h = months_to_forecast)
-    # fcst <- fit |> forecast(h = 40)
     
-    # Plot results
-    autoplot(fcst, df)
-    autoplot(fcst, df, level = NULL)
-    autoplot(filter(fcst, .model %in% c('arima_ets_aada')), df)
-
-    fcst <- fcst |> filter(.model == 'arima_ets_aada')
-    
-    # Plot results
-    autoplot(fcst, df, level = NULL) +
-        ggtitle("TSA Passenger Forecast | Combination ARIMA + ETS(A, Ad, A) Model") +
+    # Plot all three model forecast lines
+    autoplot(fcst, df) +
+        ggtitle("TSA Passenger Forecast | ARIMA, ETS(A,Ad,A), and Combination") +
         scale_y_continuous(
             name="Passengers",
             labels=label_number(scale_cut = cut_short_scale())
         ) +
         theme(axis.title.x = element_blank())
-    ggsave("images/tsa-passenger-forecast.png", width=16.18, height=10, units='cm')
+    ggsave("images/final-forecast-three-models.png", width=16.18, height=10, units='cm')
+       
+    # Plot final combination model
+    fcst <- fcst |> filter(.model == 'arima_ets_aada')
+    autoplot(fcst, df_hist, level = NULL) +
+        ggtitle("TSA Passenger Forecast | Combination ARIMA + ETS(A,Ad,A) Model") +
+        scale_y_continuous(
+            name="Passengers",
+            labels=label_number(scale_cut = cut_short_scale())
+        ) +
+        theme(axis.title.x = element_blank())
+    ggsave("images/final-forecast.png", width=16.18, height=10, units='cm')
        
     return(fcst)
 }
 
 
 # Calculate annual percent change and plot monthly YoY percent change
-plot_and_summarize_forecast <- function(df, fcst){
+calculate_annual_change <- function(df, fcst){
     fcst <- fcst |>
         as_tibble() |>
         select(date, .mean) |>
@@ -282,21 +275,21 @@ plot_and_summarize_forecast <- function(df, fcst){
     df <- bind_rows(df, fcst)
 
     # Calculate annual percent change in TSA Passengers
-    results <- df |>
+    df |>
         as_tibble() |>
         mutate(Year = year(date)) |>
         group_by(Year) |>
         summarize(passengers = sum(passengers)) |>
         arrange(Year) |>
         mutate(pct_chg = percent((passengers / lag(passengers) - 1)))
-    print(results)
+
 
     # Plot monthly year-over-year percent change trend
-    monthly_chg <- df |>
-        as_tibble() |>
-        mutate(pct_chg = passengers / lag(passengers, 12) - 1)
-    ggplot(monthly_chg, mapping = aes(x = date, y = pct_chg)) +
-        geom_line()
+    # monthly_chg <- df |>
+    #     as_tibble() |>
+    #     mutate(pct_chg = passengers / lag(passengers, 12) - 1)
+    # ggplot(monthly_chg, mapping = aes(x = date, y = pct_chg)) +
+    #     geom_line()
 
 }
 
@@ -304,5 +297,14 @@ plot_and_summarize_forecast <- function(df, fcst){
 df <- prepare_data()
 stl_decomposition(df)
 train_test_models(df)
-fcst <- forecast_data(df)
-plot_and_summarize_forecast(df, fcst)
+perform_cross_validation(df)
+fcst <- final_forecast(df)
+calculate_annual_change(df, fcst)
+
+# output <- capture.output(calculate_annual_change(df, fcst))
+# html_file <- file("output.html", "w")
+# writeLines("<pre><code>", html_file)
+# writeLines(output, html_file)
+# writeLines("</code></pre>", html_file)
+# close(html_file)
+
