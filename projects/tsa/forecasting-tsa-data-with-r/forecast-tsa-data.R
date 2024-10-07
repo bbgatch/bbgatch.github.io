@@ -16,7 +16,7 @@ library(feasts)
 # Read in and prepare data. Plot full history.
 prepare_data <- function(){
     # Read in data
-    df <- read_csv('../tsa.csv')
+    df <- read_csv('tsa.csv')
     tail(df)
     
     # Sum passengers by month
@@ -94,7 +94,8 @@ train_test_models <- function(df){
     
     # View model forecast accuracy against test set
     accuracy(fcst, df) |>
-        arrange(RMSE)
+        arrange(RMSE) |>
+        print()
 
     # Create combined models
     fcst <- fit |> mutate(
@@ -104,7 +105,8 @@ train_test_models <- function(df){
        
     # View model forecast accuracy against test set
     accuracy(fcst, df) |>
-        arrange(RMSE) # |>
+        arrange(RMSE) |>
+        print()
     # Save HTML table of model results
         # gt() |>
         # as_raw_html() |>
@@ -183,9 +185,10 @@ perform_cross_validation <- function(df){
         ungroup() |>
         as_fable(response = "passengers", distribution = passengers)
     
-    accuracy(fcst, df) |> arrange(RMSE)
-    accuracy(filter(fcst, h == 12), df) |> arrange(RMSE)
-    accuracy(filter(fcst, h == 1), df) |> arrange(RMSE)
+    # Print model accuracy
+    accuracy(fcst, df) |> arrange(RMSE) |> print()
+    # accuracy(filter(fcst, h == 12), df) |> arrange(RMSE)
+    # accuracy(filter(fcst, h == 1), df) |> arrange(RMSE)
     # accuracy(fcst |> group_by(h), df) |> print(n=10000)
     
     # Plot forecast accuracy by months out
@@ -281,7 +284,8 @@ calculate_annual_change <- function(df, fcst){
         group_by(Year) |>
         summarize(passengers = sum(passengers)) |>
         arrange(Year) |>
-        mutate(pct_chg = percent((passengers / lag(passengers) - 1)))
+        mutate(pct_chg = percent((passengers / lag(passengers) - 1))) |>
+        print()
 
 
     # Plot monthly year-over-year percent change trend
@@ -300,11 +304,3 @@ train_test_models(df)
 perform_cross_validation(df)
 fcst <- final_forecast(df)
 calculate_annual_change(df, fcst)
-
-# output <- capture.output(calculate_annual_change(df, fcst))
-# html_file <- file("output.html", "w")
-# writeLines("<pre><code>", html_file)
-# writeLines(output, html_file)
-# writeLines("</code></pre>", html_file)
-# close(html_file)
-
