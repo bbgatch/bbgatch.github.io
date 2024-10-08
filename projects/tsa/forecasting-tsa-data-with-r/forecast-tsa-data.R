@@ -81,7 +81,7 @@ train_test_models <- function(df){
         
         # Auto-ARIMA and Auto-ETS models
         arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
-        ets = ETS(passengers),
+        # ets = ETS(passengers),
 
         # Specify ETS models
         ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
@@ -107,10 +107,6 @@ train_test_models <- function(df){
     accuracy(fcst, df) |>
         arrange(RMSE) |>
         print()
-    # Save HTML table of model results
-        # gt() |>
-        # as_raw_html() |>
-        # writeLines("train-test-split-accuracy.html")
     
     # Plot results
     # autoplot(fcst, df, level = NULL)
