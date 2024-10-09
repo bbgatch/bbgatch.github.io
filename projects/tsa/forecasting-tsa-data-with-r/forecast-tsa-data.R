@@ -208,7 +208,6 @@ perform_cross_validation <- function(df){
         ) +
         scale_x_continuous(
             breaks = seq(1, 12)
-            # breaks=breaks_pretty()
         ) +
         theme(panel.grid.minor = element_blank())
         

@@ -18,17 +18,42 @@
 
             <p>If we want to create a forecast in R for the TSA Passenger data to predict passenger volumes in the future, we can use the <a href="https://tidyverts.org">tidyverts packages</a> <code>fable</code>, <code>tsibble</code>, and <code>feasts</code>.</p>
 
-            <p>These packages apply <a href="https://r4ds.had.co.nz/tidy-data.html">tidy data principles</a> to time series data and forecasting. They were coauthored by the forecasting great <a href="https://robjhyndman.com">Rob Hyndman</a>. If you are interested in learning more about forecasting, I highly recommend Rob Hyndman and George Athanasopoulos's fantastic textbook: <a href="https://otexts.com/fpp3/">Forecasting: Principles and Practice (3rd Edition) (FPP3)</a>, which uses these tidyverts packages and workflows.</p>
+            <p>These packages apply <a href="https://r4ds.had.co.nz/tidy-data.html">tidy data principles</a> to time series data and forecasting. They were coauthored by the forecasting great <a href="https://robjhyndman.com">Rob Hyndman</a>. If you are interested in learning more about forecasting, I highly recommend Rob Hyndman and George Athanasopoulos's fantastic textbook: <a href="https://otexts.com/fpp3/">Forecasting: Principles and Practice (3rd Edition)</a> (FPP3), which uses these tidyverts packages and workflows.</p>
             
             <h2>Plotting History</h2>
-                <p>The historical TSA Passenger data that we have looks like this:</p>
+                <p>The monthly historical TSA Passenger data that we have from 2019 to September 2024 looks like this:</p>
+
+                <pre><code>
+                    autoplot(df, passengers) + 
+                    ggtitle("TSA Passenger History") +
+                    scale_y_continuous(
+                        name="Passengers",
+                        labels=label_number(scale_cut = cut_short_scale())
+                    ) +
+                    theme(axis.title.x = element_blank())
+                </code></pre>
+
                 <img src="images/tsa-passenger-history.png" alt="Line plot of TSA Passenger History." class="responsive" width="80%">
                 
+                <p>We do have the data at a daily level, but for this exercise we're just forecasting monthly.</p>
+
                 <p>There is clear seasonality in the data, and there has been an upward trend coming out of the Covid downturn.</p>
+
+                <pre><code>
+                    dcmp <- df |>
+                        model(stl = STL(passengers))
+                    components(dcmp) |>
+                        autoplot() +
+                        scale_y_continuous(
+                            name="Passengers",
+                            labels=label_number(scale_cut = cut_short_scale())
+                        )
+                </code></pre>
+
                 <img src="images/time-series-decomposition.png" alt="Line plots decomposing TSA Passenger History time series into trend, seasonality, and remainder components." class="responsive" width="80%">
                 
             <h2>Evaluating Models with a Train/Test Split</h2>
-                <p>The <code>fable</code> package provides several time series models to choose from. We can evaluate which models perform the best by breaking our data into separate train/test sets. We then fit each model on the training data, generate a forecast from each model over the test set time period, and we evaluate each model's forecast against our test set to measure accuracy.</p>
+                <p>The <code>fable</code> package provides several time series models to choose from. We can evaluate which models perform the best by breaking our data into separate train/test sets. We fit each model on the training data, generate a forecast from each model over the test set time period, and evaluate each model's forecast against our test set to measure accuracy.</p>
                 
                 <p>We'll start with <a href="https://otexts.com/fpp3/simple-methods.html">four simple baseline models</a> that allow us to compare our more complex models against simple but still effective baselines. We'll use the <code>ARIMA</code> function to find the best fitting ARIMA model, and we'll try four different ETS models. We know that trend and seasonality are likely to continue, so we will limit ourselves to just these ETS models, but you could try others. Alternatively, the <code>ETS()</code> function can select the best-fitting ETS model for you, just like the <code>ARIMA()</code> function.</p>
 
@@ -47,7 +72,7 @@
                         arima = ARIMA(passengers, stepwise=FALSE, approximation=FALSE),
                         # ets = ETS(passengers),
                 
-                        # Specify ETS models
+                        # ETS models
                         ets_aaa = ETS(passengers ~ error('A') + trend('A') + season('A')),
                         ets_aada = ETS(passengers ~ error('A') + trend('Ad') + season('A')),
                         ets_aam = ETS(passengers ~ error('A') + trend('A') + season('M')),
@@ -57,7 +82,7 @@
 
                 <img src="images/train-test-model-accuracy-initial.png" alt="Terminal output of initial forecast model results." class="responsive" width="80%">
                 
-                <p>Thankfully our ARIMA and ETS models do outperform our baselines! The <code>arima</code> model performs the best and <code>ets_aada</code> is second. The models with multiplicative seasonality don't perform as well and actually underperform some of our baselines.</p>
+                <p>Thankfully our ARIMA and ETS models do mostly outperform our baselines! The <code>ets_aada</code> and <code>ets_aada</code> models perform the best. The models with multiplicative seasonality don't perform as well and actually underperform some of our baselines. The <code>arima</code> model underperforms the seasonal naive baseline model, but outperforms the rest.</p>
                 
                 <p>One nice feature of <code><a href="https://fable.tidyverts.org">fable</a></code> is that it makes it very easy to <a href="https://otexts.com/fpp3/combinations.html">combine or ensemble multiple forecast models.</a> Hyndman and Athanasopoulos describe this as such:</p>
 
@@ -81,18 +106,61 @@
                 
                 <p>After adding in our two combined models, the plain ETS models still perform the best.</p>
                 
-                <p>We can plot the forecasts from the top 5 models to see how they compare to the historical actuals:</p>
+                <p>We can plot the forecasts from ARIMA, combination, and top ETS models to see how they compare to the historical actuals in our test data:</p>
+
+                <pre><code>
+                    autoplot(filter(fcst, .model %in% c(
+                        'arima',
+                        'ets_aaa',
+                        'ets_aada',
+                        'arima_ets_aaa',
+                        'arima_ets_aada'
+                    )), df, level = NULL) +
+                        ggtitle("Top Forecast Models by RMSE on TSA Passenger Test Data") +
+                        scale_y_continuous(
+                            name="Passengers",
+                            labels=label_number(scale_cut = cut_short_scale())
+                        ) +
+                        theme(axis.title.x = element_blank())
+                </code></pre>
 
                 <img src="images/train-test-top-forecast-models.png" alt="Line plot showing performance of top forecast models." class="responsive" width="80%">
 
-                <p>Based on these results, I would pick either the top-performing <code>ets_aada</code> or the combined <code>arima_ets_aada</code> model. While the <code>ets_aada</code> model is more accurate compared to the test set right now, over the long term I would probably prefer to use an ensemble model. As I've been maintaining this data and working with these forecasts, the ARIMA and ETS models will occasionally swap places as the best performer, so long-term we'd probably benefit from using a combined model that takes both ARIMA and ETS approaches into account.</p>
+                <p>Based on these results, I would pick either the top-performing <code>ets_aada</code> or the combined <code>arima_ets_aada</code> model. While the <code>ets_aada</code> model is more accurate compared to the test set right now, over the long term I would probably prefer an ensemble. As I've worked on this forecast over the past couple months, the top performing model can swap between ETS and ARIMA as we get new data each month. So long-term I'd prefer to use an ensemble model that takes both ARIMA and ETS approaches into account.</p>
                 
             <h2>Evaluating Models with Cross Validation</h2>
-                <p>Another approach to time series model evaluation is <a href="https://otexts.com/fpp3/tscv.html">cross validation</a>. This is a little different from the cross validation you may have used in other machine learning contexts. With time series data, we start with an initial base set of only <i>n</i> historical data points, fit our models, calculate forecasts, and measure accuracy. We then repeat the process by adding one additional data point (or more) to the base set of historical data with each step, fit the moels, forecast, and measure accuracy. In each iteration we're forecasting one or more steps out. Prof. Hyndman uses this visualization below in his textbook to help explain the process. The blue dots are the base history we're using to fit our models, and the orange dots are the future points we're trying to estimate:</p>
+                <p>Another approach to time series model evaluation is <a href="https://otexts.com/fpp3/tscv.html">cross validation</a>. This is a little different from the cross validation you may have used in other machine learning contexts. With time series data, we start with an initial base set of only <i>n</i> historical data points, fit our models, calculate forecasts, and measure accuracy. We then repeat the process by adding one additional data point (or more) to the base set of historical data with each step, fit the moels, forecast, and measure accuracy. In each iteration we're forecasting one or more steps out. Hyndman and Athanasopoulos use the visualization below in FPP3 to help explain the process. The blue dots are the base history we're using to fit our models, and the orange dots are the future points we're trying to estimate:</p>
 
                 <img src="images/fpp3-cross-validation.png" alt="" class="responsive" width="60%">
                 
                 <p>One neat benefit of this approach is that if we're forecasting more than one step ahead in each iteration we can see the average model accuracy across all of the CV sets at 1 to <i>n</i> steps out. As we'd expect, model accuracy gets worse the further out we try to forecast, but we can see how the models compare at different future forecast steps. The best performing model across the CV sets is the ETS(A,Ad,A) model, and the second best is the combination of ARIMA and ETS(A,Ad,A).</p>
+                
+                <pre><code>
+                    accuracy(fcst |> group_by(h), df) |>
+                        filter(!(.model %in% c(
+                            'drift',
+                            'mean',
+                            'naive',
+                            'snaive',
+                            'tslm'
+                        ))) |>
+                        ggplot(mapping = aes(x = h, y = RMSE, color = .model)) +
+                        geom_line() +
+                        labs(
+                            title = "TSA Passenger History",
+                            x = "Forecast RMSE N Months Out"
+                        ) +
+                        scale_y_continuous(
+                            name="RMSE",
+                            labels=label_number(scale_cut = cut_short_scale())
+                        ) +
+                        scale_x_continuous(
+                            breaks = seq(1, 12)
+                        ) +
+                        theme(panel.grid.minor = element_blank())
+                        
+                </code></pre>
+
                 <img src="images/cross-validation-forecast-error.png" alt="" class="responsive" width="80%">
                 
                 <p>The total model accuracy across all CV steps and forecast periods is below. It's also possible to calculate the accuracy just for <i>n</i> specific forecast steps out if needed.</p>
@@ -106,7 +174,7 @@
 
                 <img src="images/final-forecast-three-models.png" alt="" class="responsive" width="80%">
                 
-                <p>Finally, let's plot just the point forecast of the final chosen combined model with the full history.</p>
+                <p>Finally, let's plot just the point forecast of the finalß chosen ensemble model with the full history.</p>
                 
                 <img src="images/final-forecast.png" alt="" class="responsive" width="80%">
                 
