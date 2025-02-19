@@ -7,7 +7,6 @@ from twilio.rest import Client
 # Convert timestamps to Eastern time zone
 # Add lists of recording and transcription IDs already saved to avoid duplicates
 # Add process to delete recordings and transcriptions after saving
-
 load_dotenv()
 
 account_sid = os.getenv("TWILIO_ACCOUNT_SID")
@@ -62,4 +61,16 @@ for transcription in transcriptions:
     print(f'Downloaded transcription {file_name}')
 
 
+f = open("recordings-saved.txt", "a")
+for recording in recordings:
+    f.write(recording.sid + "\n")
+f.close()
+
+f = open("recordings-saved.txt", "r")
+print(f.read())
+
+with open("recordings-saved.txt", "r") as file:
+    lines = file.readlines()
+
+print(lines)
 
