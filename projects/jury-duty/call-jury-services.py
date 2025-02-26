@@ -81,95 +81,164 @@ for recording in recordings:
 
 
 insert_query = """
-    INSERT INTO recordings (
-        sid, date_created, date_updated, duration, price, price_unit,
-        start_time, status, recording, call_sid, account_sid, conference_sid,
-        channels, source, error_code, uri, encryption_details, subresource_uris,
-        media_url, api_version
+    -- INSERT OR IGNORE will insert any new records but ignore any that already exist
+    INSERT OR IGNORE INTO recordings (
+        sid,
+        date_created,
+        date_updated,
+        duration,
+        price,
+        price_unit,
+        start_time,
+        status,
+        recording,
+        call_sid,
+        account_sid,
+        conference_sid,
+        channels,
+        source,
+        error_code,
+        uri,
+        encryption_details,
+        subresource_uris,
+        media_url,
+        api_version
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 try:
     cursor.executemany(insert_query, data_to_insert)
     conn.commit()
-    print(f"Inserted {len(data_to_insert)} recordings!")
+    # cursor.rowcount is the number of records inserted
+    print(f"Inserted {cursor.rowcount} recordings!")
+except sqlite3.IntegrityError as e:
+    print(f"Some inserts failed: {e}")
+    conn.rollback()
+
+
+transcriptions = client.transcriptions.list()
+data_to_insert = []
+for transcription in transcriptions:
+    # Map Twilio recording attributes to your table columns
+    # Twilio gives datetime objects; convert to ISO strings
+    record = (
+        transcription.sid,
+        transcription.date_created.isoformat(),
+        transcription.date_updated.isoformat(),
+        transcription.duration,
+        float(transcription.price),
+        transcription.price_unit,
+        transcription.status,
+        transcription.transcription_text,
+        transcription.account_sid,
+        transcription.type,
+        transcription.recording_sid,
+        transcription.uri,
+        transcription.api_version
+    )
+    data_to_insert.append(record)
+
+insert_query = """
+    -- INSERT OR IGNORE will insert any new records but ignore any that already exist
+    INSERT OR IGNORE INTO transcriptions (
+        sid,
+        date_created,
+        date_updated,
+        duration,
+        price,
+        price_unit,
+        status,
+        transcription_text,
+        account_sid,
+        type,
+        recording_sid,
+        uri,
+        api_version
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+"""
+try:
+    cursor.executemany(insert_query, data_to_insert)
+    conn.commit()
+    # cursor.rowcount is the number of records inserted
+    print(f"Inserted {cursor.rowcount} transcriptions!")
 except sqlite3.IntegrityError as e:
     print(f"Some inserts failed: {e}")
     conn.rollback()
 
 conn.close()
 
+################################################################################
 
-for recording in recordings:
-    if recording.sid in saved_recording_ids:
-        print(f'Recording {recording.sid} already saved')
-    else:
-        # Download the recording
-        recording_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording.sid}.mp3'
-        recording_response = requests.get(recording_url, auth=(account_sid, auth_token))
-        # if int(recording.duration) < 20:
-        #     print(f"Recording is too short, check for issues or rerun: {recording.sid}")
-        # Save date and duration of recording in file name
-        file_name = recording.date_created.strftime('%Y-%m-%d') + '-' + recording.duration + 'sec-' + recording.sid + '.mp3'
-        with open(f'recordings/{file_name}', 'wb') as f:
-            f.write(recording_response.content)
-        print(f'Downloaded recording {file_name}')
-        # Save downloaded recording ID to file of stored IDs
-        with open('recordings/stored-recordings.txt', 'a') as f:
-            f.write(recording.sid + '\n')
+# for recording in recordings:
+#     if recording.sid in saved_recording_ids:
+#         print(f'Recording {recording.sid} already saved')
+#     else:
+#         # Download the recording
+#         recording_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording.sid}.mp3'
+#         recording_response = requests.get(recording_url, auth=(account_sid, auth_token))
+#         # if int(recording.duration) < 20:
+#         #     print(f"Recording is too short, check for issues or rerun: {recording.sid}")
+#         # Save date and duration of recording in file name
+#         file_name = recording.date_created.strftime('%Y-%m-%d') + '-' + recording.duration + 'sec-' + recording.sid + '.mp3'
+#         with open(f'recordings/{file_name}', 'wb') as f:
+#             f.write(recording_response.content)
+#         print(f'Downloaded recording {file_name}')
+#         # Save downloaded recording ID to file of stored IDs
+#         with open('recordings/stored-recordings.txt', 'a') as f:
+#             f.write(recording.sid + '\n')
 
 
-def save_recordings(client):
-    # Read in saved recording IDs
-    saved_recording_ids = read_saved_ids(type="recordings")
-    # Download recordings
-    client = client
-    recordings = client.recordings.list()
-    for recording in recordings:
-        if recording.sid in saved_recording_ids:
-            print(f'Recording {recording.sid} already saved')
-        else:
-            # Download the recording
-            recording_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording.sid}.mp3'
-            recording_response = requests.get(recording_url, auth=(account_sid, auth_token))
-            # if int(recording.duration) < 20:
-            #     print(f"Recording is too short, check for issues or rerun: {recording.sid}")
-            # Save date and duration of recording in file name
-            file_name = recording.date_created.strftime('%Y-%m-%d') + '-' + recording.duration + 'sec-' + recording.sid + '.mp3'
-            with open(f'recordings/{file_name}', 'wb') as f:
-                f.write(recording_response.content)
-            print(f'Downloaded recording {file_name}')
-            # Save downloaded recording ID to file of stored IDs
-            with open('recordings/stored-recordings.txt', 'a') as f:
-                f.write(recording.sid + '\n')
+# def save_recordings(client):
+#     # Read in saved recording IDs
+#     saved_recording_ids = read_saved_ids(type="recordings")
+#     # Download recordings
+#     client = client
+#     recordings = client.recordings.list()
+#     for recording in recordings:
+#         if recording.sid in saved_recording_ids:
+#             print(f'Recording {recording.sid} already saved')
+#         else:
+#             # Download the recording
+#             recording_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording.sid}.mp3'
+#             recording_response = requests.get(recording_url, auth=(account_sid, auth_token))
+#             # if int(recording.duration) < 20:
+#             #     print(f"Recording is too short, check for issues or rerun: {recording.sid}")
+#             # Save date and duration of recording in file name
+#             file_name = recording.date_created.strftime('%Y-%m-%d') + '-' + recording.duration + 'sec-' + recording.sid + '.mp3'
+#             with open(f'recordings/{file_name}', 'wb') as f:
+#                 f.write(recording_response.content)
+#             print(f'Downloaded recording {file_name}')
+#             # Save downloaded recording ID to file of stored IDs
+#             with open('recordings/stored-recordings.txt', 'a') as f:
+#                 f.write(recording.sid + '\n')
 
-save_recordings(client)
+# save_recordings(client)
 
-# Download transcriptions
-def save_transcriptions(client):
-    # Read in saved transcription IDs
-    saved_transcription_ids = read_saved_ids(type="transcriptions")
-    # Download transcriptions
-    client = client
-    transcriptions = client.transcriptions.list()
-    for transcription in transcriptions:
-        if transcription.sid in saved_transcription_ids:
-            print(f'Transcription {transcription.sid} already saved')
-        else:
-            # Download the transcription
-            transcription_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Transcriptions/{transcription.sid}.txt'
-            transcription_response = requests.get(transcription_url, auth=(account_sid, auth_token))
-            # if int(transcription.duration) < 20:
-            #     print(f"Recording seems too short, check for issues or rerun: {transcription.sid}")
-            # Save date and duration of transcription in file name
-            file_name = transcription.date_created.strftime('%Y-%m-%d') + '-' + transcription.duration + 'sec-' + transcription.sid + '.txt'
-            with open(f'transcriptions/{file_name}', 'w') as f:
-                f.write(transcription_response.text)
-            print(f'Downloaded transcription {file_name}')
-            # Save downloaded transcription ID to file of stored IDs
-            with open('transcriptions/stored-transcriptions.txt', 'a') as f:
-                f.write(transcription.sid + '\n')
+# # Download transcriptions
+# def save_transcriptions(client):
+#     # Read in saved transcription IDs
+#     saved_transcription_ids = read_saved_ids(type="transcriptions")
+#     # Download transcriptions
+#     client = client
+#     transcriptions = client.transcriptions.list()
+#     for transcription in transcriptions:
+#         if transcription.sid in saved_transcription_ids:
+#             print(f'Transcription {transcription.sid} already saved')
+#         else:
+#             # Download the transcription
+#             transcription_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Transcriptions/{transcription.sid}.txt'
+#             transcription_response = requests.get(transcription_url, auth=(account_sid, auth_token))
+#             # if int(transcription.duration) < 20:
+#             #     print(f"Recording seems too short, check for issues or rerun: {transcription.sid}")
+#             # Save date and duration of transcription in file name
+#             file_name = transcription.date_created.strftime('%Y-%m-%d') + '-' + transcription.duration + 'sec-' + transcription.sid + '.txt'
+#             with open(f'transcriptions/{file_name}', 'w') as f:
+#                 f.write(transcription_response.text)
+#             print(f'Downloaded transcription {file_name}')
+#             # Save downloaded transcription ID to file of stored IDs
+#             with open('transcriptions/stored-transcriptions.txt', 'a') as f:
+#                 f.write(transcription.sid + '\n')
 
-save_transcriptions(client)
+# save_transcriptions(client)
 
 
 # # Save IDs to a txt file
