@@ -6,13 +6,9 @@ import requests
 from dotenv import load_dotenv
 from twilio.rest import Client
 
-# TODO:
-# Convert timestamps to Eastern time zone?
-# Add process to delete recordings and transcriptions after saving?
-
 def make_call(client):
     client = client
-    client.calls.create(
+    call = client.calls.create(
         twiml='<Response><Record transcribe="true" timeout="10"/></Response>',
         to=to_number,
         from_=from_number,
@@ -20,11 +16,19 @@ def make_call(client):
         trim="trim-silence",
         time_limit=120
         # record=True,  # We're already recording in the response TWIML call above, so including record here will cause duplicate recordings
-        # recording_track="inbound",
-        # recording_channels="mono",
     )
-    # print(call.sid)
     print("Making call to jury services")
+    print("Waiting four minutes for call to take place and transcription to be generated")
+    time.sleep(240)
+    
+    # Check if call was successful
+    call = client.calls(call.sid).fetch()
+    print(f"Call placed: {call.date_created}")
+    print(f"Status: {call.status}")
+    print(f"Duration (secs): {call.duration}")
+    if call.status != "completed" or int(call.duration) < 30:
+        print("*** Call was not completed successfully! ***")
+
 
 def save_recordings():
     print("Saving recordings")
@@ -167,95 +171,6 @@ if __name__ == "__main__":
     client = Client(account_sid, auth_token)
 
     make_call(client)
-    print("Waiting four minutes for call to take place and transcription to be generated")
-    time.sleep(240)
     save_recordings()
     save_transcriptions()
-
-
-################################################################################
-
-# for recording in recordings:
-#     if recording.sid in saved_recording_ids:
-#         print(f'Recording {recording.sid} already saved')
-#     else:
-#         # Download the recording
-#         recording_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording.sid}.mp3'
-#         recording_response = requests.get(recording_url, auth=(account_sid, auth_token))
-#         # if int(recording.duration) < 20:
-#         #     print(f"Recording is too short, check for issues or rerun: {recording.sid}")
-#         # Save date and duration of recording in file name
-#         file_name = recording.date_created.strftime('%Y-%m-%d') + '-' + recording.duration + 'sec-' + recording.sid + '.mp3'
-#         with open(f'recordings/{file_name}', 'wb') as f:
-#             f.write(recording_response.content)
-#         print(f'Downloaded recording {file_name}')
-#         # Save downloaded recording ID to file of stored IDs
-#         with open('recordings/stored-recordings.txt', 'a') as f:
-#             f.write(recording.sid + '\n')
-
-
-# def save_recordings(client):
-#     # Read in saved recording IDs
-#     saved_recording_ids = read_saved_ids(type="recordings")
-#     # Download recordings
-#     client = client
-#     recordings = client.recordings.list()
-#     for recording in recordings:
-#         if recording.sid in saved_recording_ids:
-#             print(f'Recording {recording.sid} already saved')
-#         else:
-#             # Download the recording
-#             recording_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording.sid}.mp3'
-#             recording_response = requests.get(recording_url, auth=(account_sid, auth_token))
-#             # if int(recording.duration) < 20:
-#             #     print(f"Recording is too short, check for issues or rerun: {recording.sid}")
-#             # Save date and duration of recording in file name
-#             file_name = recording.date_created.strftime('%Y-%m-%d') + '-' + recording.duration + 'sec-' + recording.sid + '.mp3'
-#             with open(f'recordings/{file_name}', 'wb') as f:
-#                 f.write(recording_response.content)
-#             print(f'Downloaded recording {file_name}')
-#             # Save downloaded recording ID to file of stored IDs
-#             with open('recordings/stored-recordings.txt', 'a') as f:
-#                 f.write(recording.sid + '\n')
-
-# save_recordings(client)
-
-# # Download transcriptions
-# def save_transcriptions(client):
-#     # Read in saved transcription IDs
-#     saved_transcription_ids = read_saved_ids(type="transcriptions")
-#     # Download transcriptions
-#     client = client
-#     transcriptions = client.transcriptions.list()
-#     for transcription in transcriptions:
-#         if transcription.sid in saved_transcription_ids:
-#             print(f'Transcription {transcription.sid} already saved')
-#         else:
-#             # Download the transcription
-#             transcription_url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Transcriptions/{transcription.sid}.txt'
-#             transcription_response = requests.get(transcription_url, auth=(account_sid, auth_token))
-#             # if int(transcription.duration) < 20:
-#             #     print(f"Recording seems too short, check for issues or rerun: {transcription.sid}")
-#             # Save date and duration of transcription in file name
-#             file_name = transcription.date_created.strftime('%Y-%m-%d') + '-' + transcription.duration + 'sec-' + transcription.sid + '.txt'
-#             with open(f'transcriptions/{file_name}', 'w') as f:
-#                 f.write(transcription_response.text)
-#             print(f'Downloaded transcription {file_name}')
-#             # Save downloaded transcription ID to file of stored IDs
-#             with open('transcriptions/stored-transcriptions.txt', 'a') as f:
-#                 f.write(transcription.sid + '\n')
-
-# save_transcriptions(client)
-
-
-# # Save IDs to a txt file
-# recordings = [recording.sid for recording in recordings]
-# with open('recordings/stored-recordings.txt', 'w') as f:
-#     for recording in recordings:
-#         f.write(recording + '\n')
-
-# transcriptions = [transcription.sid for transcription in transcriptions]
-# with open('transcriptions/stored-transcriptions.txt', 'w') as f:
-#     for transcription in transcriptions:
-#         f.write(transcription + '\n')
 
