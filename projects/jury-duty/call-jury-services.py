@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import sqlite3
 import requests
 from dotenv import load_dotenv
@@ -23,8 +24,10 @@ def make_call(client):
         # recording_channels="mono",
     )
     # print(call.sid)
+    print("Making call to jury services")
 
 def save_recordings():
+    print("Saving recordings")
     # SQLite connection
     conn = sqlite3.connect('jury_duty.db')
     cursor = conn.cursor()
@@ -88,7 +91,7 @@ def save_recordings():
         cursor.executemany(insert_query, data_to_insert)
         conn.commit()
         # cursor.rowcount is the number of records inserted
-        print(f"Inserted {cursor.rowcount} recordings!")
+        print(f"Inserted {cursor.rowcount} recordings")
     except sqlite3.IntegrityError as e:
         print(f"Some inserts failed: {e}")
         conn.rollback()
@@ -97,6 +100,7 @@ def save_recordings():
 
 
 def save_transcriptions():
+    print("Saving transcriptions")
     # SQLite connection
     conn = sqlite3.connect('jury_duty.db')
     cursor = conn.cursor()
@@ -145,7 +149,7 @@ def save_transcriptions():
         cursor.executemany(insert_query, data_to_insert)
         conn.commit()
         # cursor.rowcount is the number of records inserted
-        print(f"Inserted {cursor.rowcount} transcriptions!")
+        print(f"Inserted {cursor.rowcount} transcriptions")
     except sqlite3.IntegrityError as e:
         print(f"Some inserts failed: {e}")
         conn.rollback()
@@ -163,8 +167,11 @@ if __name__ == "__main__":
     client = Client(account_sid, auth_token)
 
     make_call(client)
+    print("Waiting four minutes for call to take place and transcription to be generated")
+    time.sleep(240)
     save_recordings()
     save_transcriptions()
+
 
 ################################################################################
 
