@@ -7,7 +7,9 @@ select
     ,status
     ,call_sid
 from recordings
-order by date_created asc;
+order by date_created desc
+limit 5
+;
 
 select
     sid
@@ -18,4 +20,6 @@ select
     ,status
     ,transcription_text
 from transcriptions
-order by date_created asc;
+order by date_created desc
+limit 5
+;
