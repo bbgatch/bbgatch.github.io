@@ -30,10 +30,10 @@ def make_call(client):
         print("*** Call was not completed successfully! ***")
 
 
-def save_recordings():
+def save_recordings(db_path):
     print("Saving recordings")
     # SQLite connection
-    conn = sqlite3.connect('jury_duty.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     recordings = client.recordings.list()
@@ -102,13 +102,11 @@ def save_recordings():
     finally:
         conn.close()
 
-
-def save_transcriptions():
+def save_transcriptions(db_path):
     print("Saving transcriptions")
     # SQLite connection
-    conn = sqlite3.connect('jury_duty.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
     transcriptions = client.transcriptions.list()
     data_to_insert = []
     for transcription in transcriptions:
@@ -130,7 +128,6 @@ def save_transcriptions():
             transcription.api_version
         )
         data_to_insert.append(record)
-
     insert_query = """
         -- INSERT OR IGNORE will insert any new records but ignore any that already exist
         INSERT OR IGNORE INTO transcriptions (
@@ -160,6 +157,7 @@ def save_transcriptions():
     finally:
         conn.close()
 
+
 if __name__ == "__main__":
     load_dotenv()
 
@@ -167,10 +165,11 @@ if __name__ == "__main__":
     auth_token = os.getenv("TWILIO_AUTH_TOKEN")
     from_number = os.getenv("TWILIO_PHONE_NUMBER")
     to_number = os.getenv("DESTINATION_PHONE_NUMBER")
+    db_path = os.getenv("DB_PATH")
 
     client = Client(account_sid, auth_token)
 
     make_call(client)
-    save_recordings()
-    save_transcriptions()
+    save_recordings(db_path)
+    save_transcriptions(db_path)
 
