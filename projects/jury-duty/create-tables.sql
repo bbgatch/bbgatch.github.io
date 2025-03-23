@@ -10,6 +10,7 @@ create table recordings (
     recording                blob,
     recording_transcription  text,
     jury_duty_group_csv      text,
+    jury_duty_date           text,
     call_sid                 text,
     account_sid              text,
     conference_sid           text,

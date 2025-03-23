@@ -1,9 +1,10 @@
 select
     recording_sid
     ,date_created
+    ,jury_duty_date
     -- ,date_updated
     ,duration
-    ,price
+    -- ,price
     ,status
     -- ,call_sid
     ,recording_transcription

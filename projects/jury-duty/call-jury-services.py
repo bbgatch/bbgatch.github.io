@@ -14,7 +14,8 @@ from twilio.rest import Client
 def make_call(client, from_number, to_number):
     client = client
     call = client.calls.create(
-        twiml='<Response><Record transcribe="true" timeout="10"/></Response>',
+        twiml='<Response><Record timeout="10"/></Response>',
+        # twiml='<Response><Record transcribe="true" timeout="10"/></Response>',  # No longer using Twilio transcriptions
         from_=from_number,
         to=to_number,
         send_digits="1",
@@ -38,28 +39,16 @@ def make_call(client, from_number, to_number):
 def extract_group_data(transcript, openai_api_key):
     # Connect to OpenAI API
     client = OpenAI(api_key=openai_api_key)
-    # Instructions for processing the transcript
+
+    # Get the date of the jury duty
     instructions = """
-        You are an AI assistant extracting information from transcripts of an automated recording about jury duty assignments.
+        You are an AI assistant extracting information from transcripts of an 
+        automated recording about jury duty assignments.
 
-        Please extract the following:
-        1. The date of the jury duty in YYYY-MM-DD format.
-        2. Which groups need to come in for jury duty.
-        3. Which groups do not need to come in for jury duty.
+        Please extract the date of jury duty in YYYY-MM-DD format.
 
-        Format the data in CSV format like this, with a 1 indicating that the group needs to come in and 0 indicating that the group does not need to come in:
-        date,group_num,called
-        2024-01-17,1,1
-        2024-01-17,2,1
-        2024-01-17,3,1
-        2024-01-17,4,1
-        2024-01-17,5,0
-        2024-01-17,6,0
-        2024-01-17,7,0
-
-        Read carefully to check which groups are required to come in (marked as 1) and which groups are excused (marked as 0).
-        Include only the CSV data output without the header line. Don't include backticks or extra text.
-        Make sure the groups are ordered in ascending order by group number.
+        Return just the date in YYYY-MM-DD format only and don't include 
+        anything else.
     """
     # Call the OpenAI API to process the transcript
     response = client.responses.create(
@@ -68,26 +57,72 @@ def extract_group_data(transcript, openai_api_key):
         input=transcript
     )
     # Save and print initial output
-    output = response.output_text
+    jury_duty_date = response.output_text
+    
+    # Get the status for each jury duty group in CSV format
+    instructions = """
+        You are an AI assistant extracting information from transcripts of an 
+        automated recording about jury duty assignments.
+
+        Please extract the following:
+        1. The date of the jury duty in YYYY-MM-DD format.
+        2. Which groups need to come in for jury duty.
+        3. Which groups do not need to come in for jury duty.
+
+        Format the data in CSV format with the date, group number and status.
+        The group numbers should be in ascending order and the status should be
+        1 if the group needs to come in and 0 if the group does not need to come
+        in:
+        2024-01-17,1,1
+        2024-01-17,2,1
+        2024-01-17,3,1
+        2024-01-17,4,1
+        2024-01-17,5,0
+        2024-01-17,6,0
+        2024-01-17,7,0
+
+        Read carefully to check which groups are required to come in (marked as 
+        1) and which groups are excused (marked as 0).
+        Include only the CSV data output without the header line. Don't include 
+        backticks or extra text.
+        Make sure the groups are ordered in ascending order by group number.
+
+        If the transcript does not specify all groups that were called, then 
+        don't return anything. For example, if it says "Groups 1, 2, and 3 need 
+        to come in", but it doesn't specify which groups don't need to come in, 
+        then don't return anything.
+        
+        Similarly, if the transcript says that no groups are required to come in
+        and it doesn't specify which groups, then don't return anything.
+    """
+    # Call the OpenAI API to process the transcript
+    response = client.responses.create(
+        model="gpt-4o-mini",
+        instructions=instructions,
+        input=transcript
+    )
+    jury_duty_group_csv_data = response.output_text
     # print("OpenAI output:")
     # print(output)
-    
+    if jury_duty_group_csv_data == "":
+        jury_duty_group_csv_data = None
+        return (jury_duty_date, jury_duty_group_csv_data)
     # Sometimes the API does not return the results sorted by group number
     # Try to convert to Pandas DataFrame and sort by group number so that output is consistently sorted
     try:
-        df = pd.read_csv(io.StringIO(output), header=None, names=["date", "group_num", "called"])
+        df = pd.read_csv(io.StringIO(jury_duty_group_csv_data), header=None, names=["date", "group_num", "called"])
         df.sort_values(by="group_num", inplace=True)
-        return df.to_csv(index=False, header=False)
+        return (jury_duty_date, df.to_csv(index=False, header=False))
     except:
-        return output
-
+        return (jury_duty_date, jury_duty_group_csv_data)
+        
 
 def save_recordings(db_path, openai_api_key):
     print("Saving recordings")
     # SQLite connection
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
+
     # Get all recordings from Twilio
     all_recordings = client.recordings.list()
     # Get list of existing recording IDs so we don't spend time trying to re-download them
@@ -117,7 +152,9 @@ def save_recordings(db_path, openai_api_key):
             transcription = whisper_model.transcribe(temp_file_path, fp16=False)["text"]
 
             # Extract jury duty group data from transcription
-            jury_duty_group_csv = extract_group_data(transcription, openai_api_key)
+            extracted_jury_duty_data = extract_group_data(transcription, openai_api_key)
+            jury_duty_date = extracted_jury_duty_data[0]
+            jury_duty_group_csv = extracted_jury_duty_data[1]
 
             # Gather all fields that we want to save to the database
             # Twilio gives datetime objects; convert to ISO strings
@@ -133,6 +170,7 @@ def save_recordings(db_path, openai_api_key):
                 recording_mp3,  # Actual recording MP3 data we'll save in BLOB format
                 transcription,  # Transcribed recording text
                 jury_duty_group_csv,
+                jury_duty_date,
                 recording.call_sid,
                 recording.account_sid,
                 recording.conference_sid,
@@ -152,6 +190,22 @@ def save_recordings(db_path, openai_api_key):
             # Delete the temporary file
             os.unlink(temp_file_path)
 
+    # Print new recordings to confirm they look correct
+    print("\n\n----- New recordings -----")
+    print("Review to confirm group data looks correct\n")
+    for new_recording in data_to_insert:
+        print(new_recording[0])
+        print(new_recording[1])
+        print(new_recording[9])
+        print(new_recording[10])
+        print(new_recording[11])
+        print("\n\n\n")
+    # Get user input to confirm all recordings look correct before loading into database
+    user_input = input("Do all recordings look correct? (y/n): ").lower()
+    if user_input == "n":
+        print("Recordings don't look correct. \nExiting with nothing saved to the database")
+        return
+
     insert_query = """
         -- INSERT OR IGNORE will insert any new records but ignore any that already exist
         INSERT OR IGNORE INTO recordings (
@@ -166,6 +220,7 @@ def save_recordings(db_path, openai_api_key):
             recording,
             recording_transcription,
             jury_duty_group_csv,
+            jury_duty_date,
             call_sid,
             account_sid,
             conference_sid,
@@ -177,7 +232,7 @@ def save_recordings(db_path, openai_api_key):
             subresource_uris,
             media_url,
             api_version
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     try:
         cursor.executemany(insert_query, data_to_insert)
