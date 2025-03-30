@@ -133,6 +133,9 @@ def save_recordings(db_path, openai_api_key):
     
     print(f"Total recordings on Twilio: {len(all_recordings)}")
     print(f"New recordings to process: {len(new_recordings)}")
+    if len(new_recordings) == 0:
+        print("No new recordings to process")
+        return
 
     # Load whisper model for transcribing audio recording
     whisper_model = whisper.load_model("medium.en")
@@ -258,7 +261,7 @@ if __name__ == "__main__":
 
     client = Client(account_sid, auth_token)
 
-    # make_call(client, from_number, to_number)
+    make_call(client, from_number, to_number)
     save_recordings(db_path, openai_api_key)
     # save_transcriptions(db_path, openai_api_key)
 
