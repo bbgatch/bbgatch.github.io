@@ -203,14 +203,19 @@ finally:
             </code></pre>
         
         <h2>Whisper</h2>
-            <p>In the code above, we're using the English-only medium-sized model from the OpenAI whisper package. It performs very well in accurately transcribing the jury duty hotline recording.</p>
-            <p>Originally during this project, I was using Twilio's own transcription product - they will transcribe the call recording for a small fee. Surprisingly, the free, open-source whisper package from OpenAI performed signifcantly better. It did a much better job of handling unusual recording text than Twilio. In Twilio's defense, they are likely prioritizing speed/minimal cost versus accuracy. Given that I'm only running this at most 5 times a week, I don't mind if it takes extra time to transcribe the recording accurately.</p>
+            <p>In September 2022, OpenAI released <a href="https://openai.com/index/whisper/">Whisper</a>, a tool for language detection and transcription. It's used in the code above to transcribe the call recording.</p>
+            
+            <p>In the code above, we're using Whisper's English-only medium-sized model. We know these recordings will only be in English. I didn't test the accuracy of Whisper's different-sized models on the recording, but the medium model performs well and does not take too long to process.</p>
+            
+            <h3>Twilio vs Whisper</h3>
+            <p>Originally during this project, I was using Twilio's own transcription product - they will transcribe the call recording for a small fee. Surprisingly, the free, open-source whisper package from OpenAI performed signifcantly better. It did a much better job of handling unusual recording text than Twilio. In Twilio's defense, they are likely prioritizing speed/minimal cost versus accuracy. Given that I'm only running this at most 5 times a week, I'm prioritizing accuracy instead of speed.</p>
 
             <p>Here are examples of the Twilio transcription versus Whisper.</p>
 
             <p>Twilio:</p>
-
+                <p></p>
             <p>Whisper:</p>
+                <p></p>
 
            
             <pre><code class="python">
