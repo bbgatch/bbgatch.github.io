@@ -24,8 +24,10 @@ def make_call(client, from_number, to_number):
         # record=True,  # We're already recording in the response TWIML call above, so including record here will cause duplicate recordings
     )
     print("Making call to jury services")
-    print("Waiting four minutes for call to take place and transcription to be generated")
-    time.sleep(240)
+    print("Waiting 6 minutes for call to take place and information to be saved by Twilio.")
+    # There were some cases where the price information did not seem to be saved
+    # in time by Twilio so will wait longer to see if this solves this issue.
+    time.sleep(360)
     
     # Check if call was successful
     call = client.calls(call.sid).fetch()
