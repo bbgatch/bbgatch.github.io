@@ -35,27 +35,27 @@
 
             <pre><code class="python">
 def make_call(client, from_number, to_number):
-client = client
-call = client.calls.create(
-    twiml='&lt;Response&gt;&lt;Record timeout="10"/&gt;&lt;/Response&gt;',
-    from_=from_number,
-    to=to_number,
-    send_digits="1",
-    trim="trim-silence",
-    time_limit=120
-    # record=True,  # We're already recording in the response TWIML call above, so including record here will cause duplicate recordings
-)
-print("Making call to jury services")
-print("Waiting four minutes for call to take place and transcription to be generated")
-time.sleep(240)
+    client = client
+    call = client.calls.create(
+        twiml='&lt;Response&gt;&lt;Record timeout="10"/&gt;&lt;/Response&gt;',
+        from_=from_number,
+        to=to_number,
+        send_digits="1",
+        trim="trim-silence",
+        time_limit=120
+        # record=True,  # We're already recording in the response TWIML call above, so including record here will cause duplicate recordings
+    )
+    print("Making call to jury services")
+    print("Waiting four minutes for call to take place and transcription to be generated")
+    time.sleep(240)
 
-# Check if call was successful
-call = client.calls(call.sid).fetch()
-print(f"Call placed: {call.date_created}")
-print(f"Status: {call.status}")
-print(f"Duration (secs): {call.duration}")
-if call.status != "completed" or int(call.duration) < 30:
-    print("*** Call was not completed successfully! ***")            
+    # Check if call was successful
+    call = client.calls(call.sid).fetch()
+    print(f"Call placed: {call.date_created}")
+    print(f"Status: {call.status}")
+    print(f"Duration (secs): {call.duration}")
+    if call.status != "completed" or int(call.duration) < 30:
+        print("*** Call was not completed successfully! ***")            
             </code></pre>
 
         <h2>Twilio API - Downloading the data</h2>
@@ -71,135 +71,135 @@ if call.status != "completed" or int(call.duration) < 30:
             
             <pre><code class="python">
 def save_recordings(db_path, openai_api_key):
-print("Saving recordings")
-# SQLite connection
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
+    print("Saving recordings")
+    # SQLite connection
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-# Get all recordings from Twilio
-all_recordings = client.recordings.list()
-# Get list of existing recording IDs so we don't spend time trying to re-download them
-previously_downloaded_recordings = cursor.execute("select recording_sid from recordings;").fetchall()
-previously_downloaded_recordings = [recording[0] for recording in previously_downloaded_recordings]  # Convert row tuples to list of strings
-# Remove any recordings that have already been downloaded
-new_recordings = [recording for recording in all_recordings if recording.sid not in previously_downloaded_recordings]
+    # Get all recordings from Twilio
+    all_recordings = client.recordings.list()
+    # Get list of existing recording IDs so we don't spend time trying to re-download them
+    previously_downloaded_recordings = cursor.execute("select recording_sid from recordings;").fetchall()
+    previously_downloaded_recordings = [recording[0] for recording in previously_downloaded_recordings]  # Convert row tuples to list of strings
+    # Remove any recordings that have already been downloaded
+    new_recordings = [recording for recording in all_recordings if recording.sid not in previously_downloaded_recordings]
 
-print(f"Total recordings on Twilio: {len(all_recordings)}")
-print(f"New recordings to process: {len(new_recordings)}")
-if len(new_recordings) == 0:
-    print("No new recordings to process")
-    return
+    print(f"Total recordings on Twilio: {len(all_recordings)}")
+    print(f"New recordings to process: {len(new_recordings)}")
+    if len(new_recordings) == 0:
+        print("No new recordings to process")
+        return
 
-# Load whisper model for transcribing audio recording
-whisper_model = whisper.load_model("medium.en")
+    # Load whisper model for transcribing audio recording
+    whisper_model = whisper.load_model("medium.en")
 
-data_to_insert = []
-for recording in new_recordings:
-    # Get the recording
-    recording_mp3 = requests.get(recording.media_url, auth=(account_sid, auth_token)).content
-    
-    try:
-        # Create a temporary file to store the MP3
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_file:
-            temp_file.write(recording_mp3)
-            temp_file_path = temp_file.name
+    data_to_insert = []
+    for recording in new_recordings:
+        # Get the recording
+        recording_mp3 = requests.get(recording.media_url, auth=(account_sid, auth_token)).content
+        
+        try:
+            # Create a temporary file to store the MP3
+            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_file:
+                temp_file.write(recording_mp3)
+                temp_file_path = temp_file.name
 
-        # Transcribe recording with whisper
-        transcription = whisper_model.transcribe(temp_file_path, fp16=False)["text"]
+            # Transcribe recording with whisper
+            transcription = whisper_model.transcribe(temp_file_path, fp16=False)["text"]
 
-        # Extract jury duty group data from transcription
-        extracted_jury_duty_data = extract_group_data(transcription, openai_api_key)
-        jury_duty_date = extracted_jury_duty_data[0]
-        jury_duty_group_csv = extracted_jury_duty_data[1]
+            # Extract jury duty group data from transcription
+            extracted_jury_duty_data = extract_group_data(transcription, openai_api_key)
+            jury_duty_date = extracted_jury_duty_data[0]
+            jury_duty_group_csv = extracted_jury_duty_data[1]
 
-        # Gather all fields that we want to save to the database
-        # Twilio gives datetime objects; convert to ISO strings
-        record = (
-            recording.sid,
-            recording.date_created.isoformat(),
-            recording.date_updated.isoformat(),
-            recording.duration,
-            float(recording.price),
-            recording.price_unit,
-            recording.start_time.isoformat(),
-            recording.status,
-            recording_mp3,  # Actual recording MP3 data we'll save in BLOB format
-            transcription,  # Transcribed recording text
+            # Gather all fields that we want to save to the database
+            # Twilio gives datetime objects; convert to ISO strings
+            record = (
+                recording.sid,
+                recording.date_created.isoformat(),
+                recording.date_updated.isoformat(),
+                recording.duration,
+                float(recording.price),
+                recording.price_unit,
+                recording.start_time.isoformat(),
+                recording.status,
+                recording_mp3,  # Actual recording MP3 data we'll save in BLOB format
+                transcription,  # Transcribed recording text
+                jury_duty_group_csv,
+                jury_duty_date,
+                recording.call_sid,
+                recording.account_sid,
+                recording.conference_sid,
+                recording.channels,
+                recording.source,
+                recording.error_code,
+                recording.uri,
+                json.dumps(recording.encryption_details) if recording.encryption_details else None,
+                json.dumps(recording.subresource_uris) if recording.subresource_uris else None,
+                recording.media_url,
+                recording.api_version
+            )
+            data_to_insert.append(record)
+            print(f"Recording {recording.sid} processed")
+
+        finally:
+            # Delete the temporary file
+            os.unlink(temp_file_path)
+
+    # Print new recordings to confirm they look correct
+    print("\n\n----- New recordings -----")
+    print("Review to confirm group data looks correct\n")
+    for new_recording in data_to_insert:
+        print(new_recording[0])
+        print(new_recording[1])
+        print(new_recording[9])
+        print(new_recording[10])
+        print(new_recording[11])
+        print("\n\n\n")
+    # Get user input to confirm all recordings look correct before loading into database
+    user_input = input("Do all recordings look correct? (y/n): ").lower()
+    if user_input == "n":
+        print("Recordings don't look correct. \nExiting with nothing saved to the database")
+        return
+
+    insert_query = """
+        -- INSERT OR IGNORE will insert any new records but ignore any that already exist
+        INSERT OR IGNORE INTO recordings (
+            recording_sid,
+            date_created,
+            date_updated,
+            duration,
+            price,
+            price_unit,
+            start_time,
+            status,
+            recording,
+            recording_transcription,
             jury_duty_group_csv,
             jury_duty_date,
-            recording.call_sid,
-            recording.account_sid,
-            recording.conference_sid,
-            recording.channels,
-            recording.source,
-            recording.error_code,
-            recording.uri,
-            json.dumps(recording.encryption_details) if recording.encryption_details else None,
-            json.dumps(recording.subresource_uris) if recording.subresource_uris else None,
-            recording.media_url,
-            recording.api_version
-        )
-        data_to_insert.append(record)
-        print(f"Recording {recording.sid} processed")
-
+            call_sid,
+            account_sid,
+            conference_sid,
+            channels,
+            source,
+            error_code,
+            uri,
+            encryption_details,
+            subresource_uris,
+            media_url,
+            api_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+    try:
+        cursor.executemany(insert_query, data_to_insert)
+        conn.commit()
+        # cursor.rowcount is the number of records inserted
+        print(f"Inserted {cursor.rowcount} recordings into the database")
+    except Exception as e:
+        print(f"Some inserts failed: {e}")
+        conn.rollback()
     finally:
-        # Delete the temporary file
-        os.unlink(temp_file_path)
-
-# Print new recordings to confirm they look correct
-print("\n\n----- New recordings -----")
-print("Review to confirm group data looks correct\n")
-for new_recording in data_to_insert:
-    print(new_recording[0])
-    print(new_recording[1])
-    print(new_recording[9])
-    print(new_recording[10])
-    print(new_recording[11])
-    print("\n\n\n")
-# Get user input to confirm all recordings look correct before loading into database
-user_input = input("Do all recordings look correct? (y/n): ").lower()
-if user_input == "n":
-    print("Recordings don't look correct. \nExiting with nothing saved to the database")
-    return
-
-insert_query = """
-    -- INSERT OR IGNORE will insert any new records but ignore any that already exist
-    INSERT OR IGNORE INTO recordings (
-        recording_sid,
-        date_created,
-        date_updated,
-        duration,
-        price,
-        price_unit,
-        start_time,
-        status,
-        recording,
-        recording_transcription,
-        jury_duty_group_csv,
-        jury_duty_date,
-        call_sid,
-        account_sid,
-        conference_sid,
-        channels,
-        source,
-        error_code,
-        uri,
-        encryption_details,
-        subresource_uris,
-        media_url,
-        api_version
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-"""
-try:
-    cursor.executemany(insert_query, data_to_insert)
-    conn.commit()
-    # cursor.rowcount is the number of records inserted
-    print(f"Inserted {cursor.rowcount} recordings into the database")
-except Exception as e:
-    print(f"Some inserts failed: {e}")
-    conn.rollback()
-finally:
-    conn.close()
+        conn.close()
             </code></pre>
         
         <h2>Whisper</h2>
@@ -222,12 +222,103 @@ finally:
             </code></pre>
         
         <h2>OpenAI API</h2>
-            <p></p>
+            <p>Now that we have the transcription text of the recording, we need to extract the date of jury duty and which groups were called in, if any. The recording script is similar each day, but slightly different in how they outline which groups are called in. This is a nice use-case for an LLM to interpret the transcription, extract the information we need, and format it properly.</p>
+
+            <p>I initially tried to use a local LLM from Hugging Face, like Llama-3.2-3B-Instruct. I had difficulty getting it to correctly pull out the information consistently, and it wouldn't always format the output consistently. Admittedly I am new to working with local LLMs, so please <a href="https://x.com/bbgatch">reach out</a> if you think this should be an easy task for a model like Llama-3.2-3B-Instruct.</p>
+
+            <p>If it worked to paste the transcription in a mainstream LLM like ChatGPT, I knew that the OpenAI API should work. I was able to get consistent accurate results using the gpt-4o-mini model, which is quite inexpensive.</p>
+
+            <p>I'm making two calls to the API, one to extract just the date, and one to extract the group information formatted as a CSV. If no groups are called or it's not possible to determine which groups in total were called (but not necessarily called in) then the LLM just returns nothing (hence why we need to separately pull the date regardless of the groups).</p>
+
+            <p>I specify in the instructions multiple times that the CSV output should be in ascending order by group number. Occasionally the model would still output CSV data in different order - likely because the recordings often lists groups out of order ("group 2 you must report, groups 1, 3, and 4 through 12, you do not need to report"). In order to have consistent ordering, I use pandas to make sure the CSV output from the model is sorted before returning. This just helps with doing manual confirmation checks of the data.</p>
+
+            <p>While I use LLMs all the time for regular work, this is my first time using them in a programmatic setting where I need very specific, accurate results. So I welcome any feedback if this prompt can be improved or made more efficient.</p>
+        
             <pre><code class="python">
+def extract_group_data(transcript, openai_api_key):
+    # Connect to OpenAI API
+    client = OpenAI(api_key=openai_api_key)
+
+    # Get the date of the jury duty
+    instructions = """
+        You are an AI assistant extracting information from transcripts of an 
+        automated recording about jury duty assignments.
+
+        Please extract the date of jury duty in YYYY-MM-DD format.
+
+        Return just the date in YYYY-MM-DD format only and don't include 
+        anything else.
+    """
+    # Call the OpenAI API to process the transcript
+    response = client.responses.create(
+        model="gpt-4o-mini",
+        instructions=instructions,
+        input=transcript
+    )
+    # Save and print initial output
+    jury_duty_date = response.output_text
+
+    # Get the status for each jury duty group in CSV format
+    instructions = """
+        You are an AI assistant extracting information from transcripts of an 
+        automated recording about jury duty assignments.
+
+        Please extract the following:
+        1. The date of the jury duty in YYYY-MM-DD format.
+        2. Which groups need to come in for jury duty.
+        3. Which groups do not need to come in for jury duty.
+
+        Format the data in CSV format with the date, group number and status.
+        The group numbers should be in ascending order and the status should be
+        1 if the group needs to come in and 0 if the group does not need to come
+        in:
+        2024-01-17,1,1
+        2024-01-17,2,1
+        2024-01-17,3,1
+        2024-01-17,4,1
+        2024-01-17,5,0
+        2024-01-17,6,0
+        2024-01-17,7,0
+
+        Read carefully to check which groups are required to come in (marked as 
+        1) and which groups are excused (marked as 0).
+        Include only the CSV data output without the header line. Don't include 
+        backticks or extra text.
+        Make sure the groups are ordered in ascending order by group number.
+
+        If the transcript does not specify all groups that were called, then 
+        don't return anything. For example, if it says "Groups 1, 2, and 3 need 
+        to come in", but it doesn't specify which groups don't need to come in, 
+        then don't return anything.
+        
+        Similarly, if the transcript says that no groups are required to come in
+        and it doesn't specify which groups, then don't return anything.
+    """
+    # Call the OpenAI API to process the transcript
+    response = client.responses.create(
+        model="gpt-4o-mini",
+        instructions=instructions,
+        input=transcript
+    )
+    jury_duty_group_csv_data = response.output_text
+    # print("OpenAI output:")
+    # print(output)
+
+    # If no groups are called, the LLM should return nothing, so just return None in that case.
+    if jury_duty_group_csv_data == "":
+        jury_duty_group_csv_data = None
+        return (jury_duty_date, jury_duty_group_csv_data)
+
+    # Sometimes the API does not return the results sorted by group number
+    # Try to convert to Pandas DataFrame and sort by group number so that output is consistently sorted
+    try:
+        df = pd.read_csv(io.StringIO(jury_duty_group_csv_data), header=None, names=["date", "group_num", "called"])
+        df.sort_values(by="group_num", inplace=True)
+        return (jury_duty_date, df.to_csv(index=False, header=False))
+    except:
+        return (jury_duty_date, jury_duty_group_csv_data)            
             </code></pre>
         
-
-
 
             <img src="images/" alt="" class="responsive" width="80%">
 

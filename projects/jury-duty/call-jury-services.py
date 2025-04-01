@@ -104,9 +104,12 @@ def extract_group_data(transcript, openai_api_key):
     jury_duty_group_csv_data = response.output_text
     # print("OpenAI output:")
     # print(output)
+    
+    # If no groups are called, the LLM should return nothing, so just return None in that case.
     if jury_duty_group_csv_data == "":
         jury_duty_group_csv_data = None
         return (jury_duty_date, jury_duty_group_csv_data)
+    
     # Sometimes the API does not return the results sorted by group number
     # Try to convert to Pandas DataFrame and sort by group number so that output is consistently sorted
     try:
