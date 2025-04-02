@@ -266,7 +266,7 @@ if __name__ == "__main__":
 
     client = Client(account_sid, auth_token)
 
-    # make_call(client, from_number, to_number)
+    make_call(client, from_number, to_number)
     save_recordings(db_path, openai_api_key)
     # save_transcriptions(db_path, openai_api_key)
 
