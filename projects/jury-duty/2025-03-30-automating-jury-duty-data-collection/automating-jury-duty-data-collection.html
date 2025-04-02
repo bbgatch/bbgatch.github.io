@@ -9,29 +9,28 @@
 
     <body>
         <h1>Automating Jury Duty Data Collection with Twilio, Whisper, and OpenAI</h1>
-            <p><i>2025-03-30</i></p>
+            <p><i>2025-04-01</i></p>
             
             <p>A little over a year ago, I <a href="../2024-03-22-jury-duty-group-selection-probabiliy/jury-duty-group-selection.html">started collecting data</a> on which groups were called in to jury duty in my county in order to estimate how likely each group is to be called in.</p>
 
             <p>This was a manual process of calling the jury duty hotline, listening to the recorded message for the following day, and recording the groups that were and weren't called. It only took a few minutes each day, but I wondered if I could find a way to automate this process (at least partially).</p>
 
-            <p>After some researching, I found that I could automate this full data collection process with the following tools:</p>            
-            <ul></ul>
+            <p>After some researching, I found that I could automate nearly all of this data collection process with the following tools:</p>            
+            <ul>
                 <li><b>Twilio:</b> Make the call to the jury duty hotline via the Twilio API and save a recording of the message.</li>
-                <li><b>Whisper:</b> Transcripe the recording to text.</li>
-                <li><b>OpenAI API:</b> Extract the jury duty date and group status from the transcription.</li>
+                <li><b>Whisper:</b> Transcribe the recording to text.</li>
+                <li><b>OpenAI API:</b> Extract the jury duty date and group status from the transcription using gpt-4o-mini.</li>
             </ul>
+
 
         <h2>Twilio API - Making the call</h2>
             <p>Twilio's API allows lots of functionality in making calls, but for this project, we simply need to call a single number, press 1, and save a recording of the message that is played.</p>
 
-            <p>Twilio's API can use TwiML (Twilio Markup Language) for specifying instructions on how to handle calls or what actions to perform. For this case, we specify in the <code>twiml</code> parameter of the <code>client.calls.create</code> function that we want to &lt;Record&gt; the call. We also specify the timeout attribute at 10 seconds - this means that if silence is encountered on the call, the recording will wait for 10 seconds of silence before terminating.</p>
+            <p>Twilio's API uses its own TwiML (Twilio Markup Language) for specifying instructions on how to handle calls or what actions to perform. For this case, we specify in the <code>twiml</code> parameter of the <code>client.calls.create</code> function that we want to &lt;Record&gt; the call. We also specify the timeout attribute at 10 seconds - this means that if silence is encountered on the call, the recording will wait for 10 seconds of silence before terminating.</p>
                 
-            <p>It's rare to encounter extended silence when calling the recorded jury duty message, but there were occasional cases of silence longer than the 5 second default, so extending this to 10 seconds seems sufficient so far.</p>
+            <p>It's rare to encounter extended silence when calling the recorded jury duty message, but there were occasional cases of silence longer than the 5 second default, so extending this to 10 seconds seems to have solved the issue.</p>
 
             <p>We can specify other call attributes in the arguments of the <code>client.calls.create</code> function: the number to call, the digits to send after making the call, and the total time limit for the call.</p>
-
-            <p>We'll wait a few minutes for the call to be placed and the recording to be saved by Twilio, and then we'll print some descriptive information about the call from the Twilio API.</p>
 
             <pre><code class="python">
 def make_call(client, from_number, to_number):
@@ -46,8 +45,10 @@ def make_call(client, from_number, to_number):
         # record=True,  # We're already recording in the response TWIML call above, so including record here will cause duplicate recordings
     )
     print("Making call to jury services")
-    print("Waiting four minutes for call to take place and transcription to be generated")
-    time.sleep(240)
+    print("Waiting 6 minutes for call to take place and information to be saved by Twilio.")
+    # There were some cases where the price information did not seem to be saved
+    # in time by Twilio so will wait longer to see if this solves this issue.
+    time.sleep(360)
 
     # Check if call was successful
     call = client.calls(call.sid).fetch()
@@ -59,16 +60,19 @@ def make_call(client, from_number, to_number):
             </code></pre>
 
         <h2>Twilio API - Downloading the data</h2>
-            <p>Now that we've made the call and Twilio has saved a recording, we need to download and save it locally. We'll save the call metadata and recording in a SQLite database. We can also transcribe the recording locally using OpenAI's Whisper package, which we'll describe in the next section.</p>
+            <p>Now that we've made the call and Twilio has saved a recording, we need to download and save it locally. I'm saving the call metadata and recording in a SQLite database.</p>
 
-            <p>We'll save the recording as a BLOB in the SQLite table, but in order to transcribe it we'll need to save a copy to an .mp3 file, we can save a temporary local file using the tempfile package in Python, which was new to me. It saves the recording to a local mp3 file for use in transcribing, before later deleting the file.</p>
+            <p>We'll save the recording as a BLOB in the SQLite table, but in order to transcribe it we'll need to save a copy to an .mp3 file. We can save a temporary local file using the tempfile package in Python, which was new to me. It saves the recording to a local temporary mp3 file for use in transcribing, before later deleting the file.</p>
 
-            <p>This code is checking for all new recordings available on Twilio that we haven't previously saved - unique calls indicated by the recording SID generated by Twilio. Any new calls are saved to the local database.</p>
+            <p>The code is checking for all new recordings available on Twilio that we haven't previously saved - unique calls are indicated by the recording SID generated by Twilio. Any new calls are saved to the local database.</p>
 
             <p>We download the recording of the call from Twilio, transcribe it to text with the OpenAI <code>whisper</code> package, and then use the OpenAI API to extract the jury duty date and group status from the transcription text.</p>
 
-            <p>There is one part of this process that isn't fully automated. After transcribing the call and using an LLM to extract the jury date and group status, I print both to the console so that I can review them manually. If I wasn't doing this during the running of the code, I would still want to do this at some later point in reviewing the data. Now that the process it set up, it seems to work quite smoothly and accurately, but given that it's only at most 5 manual checks a week, it's not too cumbersome to verify the accuracy with a human check.</p>
-            
+            <p>There is one part of this process that isn't fully automated. After transcribing the call and using an LLM to extract the jury date and group status, I print both to the console so that I can review them manually to ensure everything has occurred accurately. If I wasn't doing this while running the code, I would still want to do this at some point in reviewing the data to make sure the LLM pulled the correct data from the transcription. So far the process is working very accurately, so perhaps eventually I'll get to the point where I trust it fully, but for now I'll continue to have a human in the loop.</p>
+
+            <p>This is what the accuracy check looks like - it prints the transcript and the LLM results and asks for confirmation on whether to add to the database table. In this case no groups are called, so None is returned instead of group CSV data:</p>
+            <img src="images/check-results.png" width="75%" class="responsive">
+
             <pre><code class="python">
 def save_recordings(db_path, openai_api_key):
     print("Saving recordings")
@@ -201,38 +205,41 @@ def save_recordings(db_path, openai_api_key):
     finally:
         conn.close()
             </code></pre>
-        
+
+
         <h2>Whisper</h2>
             <p>In September 2022, OpenAI released <a href="https://openai.com/index/whisper/">Whisper</a>, a tool for language detection and transcription. It's used in the code above to transcribe the call recording.</p>
             
             <p>In the code above, we're using Whisper's English-only medium-sized model. We know these recordings will only be in English. I didn't test the accuracy of Whisper's different-sized models on the recording, but the medium model performs well and does not take too long to process.</p>
             
             <h3>Twilio vs Whisper</h3>
-            <p>Originally during this project, I was using Twilio's own transcription product - they will transcribe the call recording for a small fee. Surprisingly, the free, open-source whisper package from OpenAI performed signifcantly better. It did a much better job of handling unusual recording text than Twilio. In Twilio's defense, they are likely prioritizing speed/minimal cost versus accuracy. Given that I'm only running this at most 5 times a week, I'm prioritizing accuracy instead of speed.</p>
+            <p>Originally during this project, I was using Twilio's own transcription product - they will transcribe the call recording for a small fee (10 cents per recording for my calls). Surprisingly, the free, open-source whisper package from OpenAI performed significantly better. It handled some unusual recording text much better than Twilio. In Twilio's defense, they are likely prioritizing speed/minimal cost versus accuracy. Given that I'm only running this at most 5 times a week, I'm prioritizing accuracy instead of speed.</p>
 
-            <p>Here are examples of the Twilio transcription versus Whisper.</p>
+            <p>Twilio handles their transcriptions as separate objects with their own metadata, so I was initially saving all transcriptions into a separate table in my SQLite database. But the switch to handling transcriptions locally with whisper greatly simplifies this, I now only need an extra column in my recordings table to store the transcription.</p>
 
-            <p>Twilio:</p>
-                <p></p>
-            <p>Whisper:</p>
-                <p></p>
+            <p>Here are transcription examples comparing Twilio and Whisper:</p>
 
-           
-            <pre><code class="python">
-            </code></pre>
-        
+            <p></p>
+
+            <h3><p>Twilio:</p></h3>
+                <p><span style="background-color: #e8e8e0;">Transferring to jerry services, Please listen to this entire message for important <b><span style="background-color: yellow">gerry, surface information</span></b> as some options have changed. Although you will hear a beep after this message, do not leave a voice mail as we are unable to retrieve those at this time. Instead, please email us at <b><span style="background-color: yellow">info dot G services at fulton County, ga dot gov.</span></b> You can also request a deferral or excusal, upload documents, an opt in to receive <b><span style="background-color: yellow">text, an e mails</span></b> by scanning the <b><span style="background-color: yellow">q r</span></b> code or typing in the <b><span style="background-color: yellow">you are url</span></b> in blue on your summons at <b><span style="background-color: yellow">fulton course, dot j peacher access dot com.</span></b> This message is for jurors scheduled <b><span style="background-color: greenyellow">for march 24th 2025. At 8 30 AM groups one through 4. You must report groups 5 through 9. You are not required to report groups 5 to 9. Your service is dismissed and there's nothing further you need to do. Scripts one to 4 must report at 8 30 AM </span></b>to the jury assembly room located on the 7th floor of the justice center tower. At 185 central avenue, Southwest atlanta, Georgia, 30303. Please complete your online questionnaire before you report for your service. By scanning the q r code on your stomach. Re parking is provided for jurors at the red and yellow, lots of the at 593 central avenue, Southwest atlanta, Georgia, 30312 to re services does not validate paid parking. You see your parking pass included with your summons or visit fulton court dot org for directions and parking information. There is a free fulton County shuttle service that will bring you to the justice center tower from the red and the yellow parking lot. Jurors using mazda should go to w W. W dot, it's smarter, dot com for more information. Again, this message is for jury scheduled for service date. March 24th 2025 at 8 30 AM groups one through 4.</span></p>
+            
+            <h3><p>Whisper:</p></h3>
+                <p><span style="background-color: #e8e8e0;">Please listen to this entire message for important <b><span style="background-color: yellow">jury service information</span></b> as some options have changed. Although you will hear a beep after this message, do not leave a voicemail as we are unable to retrieve those at this time. Instead, please email us at <b><span style="background-color: yellow">info.juryservices.foldencountyga.gov.</span></b> You can also request a deferral or excusal, upload documents, and opt in to receive <b><span style="background-color: yellow">texts and emails</span></b> by scanning the <b><span style="background-color: yellow">QR</span></b> code or typing in the <b><span style="background-color: yellow">URL</span></b> in blue on your summons at <b><span style="background-color: yellow">foldencourse.jpjuroraccess.com.</span></b> This message is for jurors scheduled <b><span style="background-color: greenyellow">for March 24, 2025 at 830 a.m. Groups 1 through 4, you must report. Groups 5 through 9, you are not required to report. Groups 5 through 9, your service is dismissed and there's nothing further you need to do. Groups 1 through 4 must report at 830 a.m.</span></b> to the jury assembly room located on the seventh floor of the Justice Center Tower at 185 Central Avenue SW Atlanta, GA 30303. Please complete your online questionnaire before you report for your service by scanning the QR code on your summons. Free parking is provided for jurors at the Red and Yellow Lots at 593 Central Avenue SW Atlanta, GA 30312. Jury services does not validate paid parking. Please see your parking pass included with your summons or visit foldencourt.org for directions and parking information. There is a free Fulton County Shuttle Service that will bring you to the Justice Center Tower from the Red and Yellow parking lots. Jurors using MARTA should go to www.itsmarta.com for more information. Again, this message is for jurors scheduled for service date March 24, 2025 at 830 a.m. Groups 1 through 4, you must report.</span></p>
+
+
         <h2>OpenAI API</h2>
             <p>Now that we have the transcription text of the recording, we need to extract the date of jury duty and which groups were called in, if any. The recording script is similar each day, but slightly different in how they outline which groups are called in. This is a nice use-case for an LLM to interpret the transcription, extract the information we need, and format it properly.</p>
 
-            <p>I initially tried to use a local LLM from Hugging Face, like Llama-3.2-3B-Instruct. I had difficulty getting it to correctly pull out the information consistently, and it wouldn't always format the output consistently. Admittedly I am new to working with local LLMs, so please <a href="https://x.com/bbgatch">reach out</a> if you think this should be an easy task for a model like Llama-3.2-3B-Instruct.</p>
+            <p>I initially tried to use a local LLM from Hugging Face, like Llama-3.2-3B-Instruct, but I had difficulty getting it to correctly pull out the information consistently, and it wouldn't always format the output consistently. Admittedly I am new to working with local LLMs, so please <a href="https://x.com/bbgatch">reach out</a> if you think this should be an easy task for a model like Llama-3.2-3B-Instruct.</p>
 
-            <p>If it worked to paste the transcription in a mainstream LLM like ChatGPT, I knew that the OpenAI API should work. I was able to get consistent accurate results using the gpt-4o-mini model, which is quite inexpensive.</p>
+            <p>I was able to get consistent, accurate results using the gpt-4o-mini model, which is also quite inexpensive at just 15 cents per 1M input tokens and 60 cents per 1M output tokens.</p>
 
-            <p>I'm making two calls to the API, one to extract just the date, and one to extract the group information formatted as a CSV. If no groups are called or it's not possible to determine which groups in total were called (but not necessarily called in) then the LLM just returns nothing (hence why we need to separately pull the date regardless of the groups).</p>
+            <p>I'm making two calls to the API, one to extract just the date, and one to extract the group information formatted as a CSV. If no groups are called or it's not possible to determine which groups were both called in and not called in, then the LLM just returns nothing (hence why we need to separately pull the date regardless of the group status).</p>
 
             <p>I specify in the instructions multiple times that the CSV output should be in ascending order by group number. Occasionally the model would still output CSV data in different order - likely because the recordings often lists groups out of order ("group 2 you must report, groups 1, 3, and 4 through 12, you do not need to report"). In order to have consistent ordering, I use pandas to make sure the CSV output from the model is sorted before returning. This just helps with doing manual confirmation checks of the data.</p>
 
-            <p>While I use LLMs all the time for regular work, this is my first time using them in a programmatic setting where I need very specific, accurate results. So I welcome any feedback if this prompt can be improved or made more efficient.</p>
+            <p>While I use mainstream LLMs all the time for regular work, this is my first time using them programmatically where I need specific, accurate results. So I welcome any feedback if this prompt can be improved or made more efficient.</p>
         
             <pre><code class="python">
 def extract_group_data(transcript, openai_api_key):
@@ -318,31 +325,12 @@ def extract_group_data(transcript, openai_api_key):
     except:
         return (jury_duty_date, jury_duty_group_csv_data)            
             </code></pre>
-        
-
-            <img src="images/" alt="" class="responsive" width="80%">
-
-            <h2>Header 2</h2>
-                <p></p>
-                
-                <h3>Header 3</h3>
-                <p></p>
-                
-                <!-- Embed the text from a separate HTML file, can be useful for results tables. -->
-                <center><embed src="results-comparison.html" width="250" height="550"></center>
-                    
-            <h2>Header 2</h2>
-                <p></p>
-                
-            <h2>Conclusions</h2>
-                <p></p>
+    
+        <h2>Conclusions</h2>
+            <p>This was an awesome project to stretch what I thought was possible. Automating this data collection was something that I initially thought would be very difficult or impossible due to the unstructured nature of the recording, but it was surprisingly doable with a little hard work!</p>
+            <a href="https://github.com/bbgatch/bbgatch.github.io/tree/main/projects/jury-duty/2025-03-30-automating-jury-duty-data-collection/call-jury-services.py"><p>Here's a link to the full code on GitHub.</p></a>
+            <p>For next steps, I would like to explore further cleaning up and trimming down the transcription so that the LLM extract is cheaper, more efficient, and more accurate.</p>
             
-            <a href="Link to code on GitHub">
-            <h2>Full Code</h2>
-            </a>
-                <pre><code class="language-r">
-                </code></pre>
-
         <!-- Footer -->
         <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/footer.js"></script>
 
