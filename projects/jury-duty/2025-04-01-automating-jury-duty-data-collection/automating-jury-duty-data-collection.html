@@ -9,7 +9,7 @@
 
     <body>
         <h1>Automating Jury Duty Data Collection with Twilio, Whisper, and the OpenAI API</h1>
-            <p><i>2025-04-01</i></p>
+            <p><i>2025-04-16</i></p>
             
             <p>A little over a year ago, I <a href="../2024-03-22-jury-duty-group-selection-probability/jury-duty-group-selection.html">started collecting data</a> on which groups were called in to jury duty in my county in order to estimate how likely each group is to be called in.</p>
 
@@ -70,8 +70,11 @@ def make_call(client, from_number, to_number):
 
             <p>There is one part of this process that isn't fully automated. After transcribing the call and using an LLM to extract the jury date and group status, I print both to the console so that I can review them manually to ensure everything has occurred accurately. If I wasn't doing this while running the code, I would still want to do this at some point in reviewing the data to make sure the LLM pulled the correct data from the transcription. So far the process is working very accurately, so perhaps eventually I'll get to the point where I trust it fully, but for now I'll continue to have a human in the loop.</p>
 
-            <p>This is what the accuracy check looks like - it prints the transcript and the LLM results and asks for confirmation on whether to add to the database table. In this case, no groups are called, so None is returned instead of group CSV data:</p>
-            <img src="images/check-results.png" width="75%" class="responsive">
+            <p>This is what the accuracy check looks like - it prints the transcript and the LLM results and asks for confirmation on whether to add to the database table:</p>
+            <img src="images/check-results-groups-called.png" width="75%" class="responsive">
+            
+            <p>If no groups are called, the CSV output is simply None:</p>
+            <img src="images/check-results-none-called.png" width="75%" class="responsive">
 
             <pre><code class="python">
 def save_recordings(db_path, openai_api_key):
