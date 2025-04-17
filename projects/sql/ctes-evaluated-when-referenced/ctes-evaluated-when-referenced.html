@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+
+    <head>
+        <!-- Header -->
+        <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/header.js"></script>
+        <title>bbgatch | CTEs are Evaluated Each Time They are Referenced</title>
+    </head>
+
+    <body>
+        <h1>CTEs are Evaluated Each Time They are Referenced</h1>
+            <p><i>2025-04-22</i></p>
+            
+            <p>Recently I ran into an interesting challenge in SQL when working in BigQuery that I was not previously aware of. I was generating a random number in a CTE (common table expression) and I then referenced that CTE multiple time later in the query. I realized that the random number in one CTE reference wasn't matching the random number in the other CTE reference.</p>
+
+            <p>After some digging, it turns out that CTEs can be evaluated each time they are referenced. So each time I was referencing the CTE, it was regenerating new random numbers, so I wouldn't be able to successfully join the CTE to itself using the random number.</p>
+
+            Here is how Google explains it in their documentation:
+            <a href="https://cloud.google.com/bigquery/docs/best-practices-performance-compute#:~:text=When%20your%20query%20contains%20common,might%20not%20always%20be%20possible."><img src="images/google-bigquery-cte-documentation.png" alt="Snapshot of Google BigQuery documentation on avoiding multiple evaluations of the same CTEs." class="responsive" width="80%"></a>
+
+            <p>They say that the query optimizer may attempt to detect parts of the query that could be executed only once, but this might not always be possible.</p>
+
+            <p>In order to get around this, we can just use a temp table.</p>
+
+        <!-- Footer -->
+        <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/footer.js"></script>
+
+    </body>
+
+</html>
