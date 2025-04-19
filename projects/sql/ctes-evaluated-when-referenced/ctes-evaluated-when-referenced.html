@@ -4,23 +4,115 @@
     <head>
         <!-- Header -->
         <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/header.js"></script>
-        <title>bbgatch | CTEs are Evaluated Each Time They are Referenced</title>
+        <title>bbgatch | CTEs Can Be Evaluated Each Time They are Referenced</title>
     </head>
 
     <body>
-        <h1>CTEs are Evaluated Each Time They are Referenced</h1>
+        <h1>CTEs Can Be Evaluated Each Time They are Referenced</h1>
             <p><i>2025-04-22</i></p>
             
             <p>Recently I ran into an interesting challenge in SQL when working in BigQuery that I was not previously aware of. I was generating a random number in a CTE (common table expression) and I then referenced that CTE multiple time later in the query. I realized that the random number in one CTE reference wasn't matching the random number in the other CTE reference.</p>
 
             <p>After some digging, it turns out that CTEs can be evaluated each time they are referenced. So each time I was referencing the CTE, it was regenerating new random numbers, so I wouldn't be able to successfully join the CTE to itself using the random number.</p>
 
-            Here is how Google explains it in their documentation:
-            <a href="https://cloud.google.com/bigquery/docs/best-practices-performance-compute#:~:text=When%20your%20query%20contains%20common,might%20not%20always%20be%20possible."><img src="images/google-bigquery-cte-documentation.png" alt="Snapshot of Google BigQuery documentation on avoiding multiple evaluations of the same CTEs." class="responsive" width="80%"></a>
+            Here is how Google explains it in their <a href="https://cloud.google.com/bigquery/docs/best-practices-performance-compute#avoid_multiple_evaluations_of_the_same_ctes">documentation</a>:
+            <a href="https://cloud.google.com/bigquery/docs/best-practices-performance-compute#avoid_multiple_evaluations_of_the_same_ctes"><img src="images/google-bigquery-cte-documentation.png" alt="Snapshot of Google BigQuery documentation on avoiding multiple evaluations of the same CTEs." class="responsive" width="80%"></a>
 
             <p>They say that the query optimizer may attempt to detect parts of the query that could be executed only once, but this might not always be possible.</p>
 
-            <p>In order to get around this, we can just use a temp table.</p>
+            <h2>BigQuery</h2>
+            <p>This is what this looks like in BigQuery if we create random numbers in one CTE and then reference it multiple times. You can see that we're matching on the IDs but the random row numbers from referencing the CTE two times (a and b) are different.</p>
+        
+            <pre><code class="language-sql">
+                with sample_data as (
+                    select id, row_number() over (order by rand()) as random_row_num
+                    from unnest(['a', 'b', 'c', 'd']) as id
+                )
+                select
+                    a.id as id_a
+                    ,a.random_row_num as row_num_a
+                    ,b.id as id_b
+                    ,b.random_row_num as row_num_b
+                
+                from sample_data as a
+                    inner join sample_data as b
+                        on a.id = b.id
+                
+                order by id_a;
+            </code></pre>
+
+            <img src="images/bq-mismatched-random-numbers.png" alt="Snapshot of Google BigQuery results showing sample rows matched on ID but with different random numbers generated in the same CTE." class="responsive" width="80%"></a>
+
+            <p>In order to get around this, we can just use a temporary table.</p>
+            <pre><code class="language-sql">
+                create temporary table sample_data as (
+                    select id, row_number() over (order by rand()) as random_row_num
+                    from unnest(['a', 'b', 'c', 'd']) as id
+                );                
+                select
+                    a.id as id_a
+                    ,a.random_row_num as row_num_a
+                    ,b.id as id_b
+                    ,b.random_row_num as row_num_b
+
+                from sample_data as a
+                    inner join sample_data as b
+                        on a.id = b.id
+
+                order by id_a;                
+            </code></pre>
+            
+            <p>Now we can see that the random row numbers are matching between the IDs from each of the separate references to the temporary table.</p>
+
+            <img src="images/bq-matched-random-numbers.png" alt="Snapshot of Google BigQuery results showing sample rows matched on ID with random numbers now matching due to use of a temporary table." class="responsive" width="80%"></a>
+
+            <h2>DuckDB</h2>
+            <p>This is also the case with DuckDB. Referencing a CTE multiple times causes it to be reevaluated each time, resulting in different random numbers for the same IDs.</p>
+            
+            <pre><code class="language-sql">
+                with sample_data as (
+                    select id.unnest as id, row_number() over (order by random()) as random_row_num
+                    from unnest(['a', 'b', 'c', 'd']) as id
+                )
+                select
+                    a.id as id_a
+                    ,a.random_row_num as row_num_a
+                    ,b.id as id_b
+                    ,b.random_row_num as row_num_b
+                
+                from sample_data as a
+                    inner join sample_data as b
+                        on a.id = b.id
+                
+                order by id_a;
+            </code></pre>
+
+            <img src="images/duckdb-mismatched-random-numbers.png" alt="Snapshot of Google BigQuery results showing sample rows matched on ID but with different random numbers generated in the same CTE." class="responsive" width="80%"></a>
+
+            <p>Similar to BigQuery, we can just use a temporary table in DuckDB.</p>
+
+            <pre><code class="language-sql">
+                create or replace temporary table sample_data as (
+                    select id.unnest as id, row_number() over (order by random()) as random_row_num
+                    from unnest(['a', 'b', 'c', 'd']) as id
+                );  
+                select
+                    a.id as id_a
+                    ,a.random_row_num as row_num_a
+                    ,b.id as id_b
+                    ,b.random_row_num as row_num_b
+                
+                from sample_data as a
+                    inner join sample_data as b
+                        on a.id = b.id
+                
+                order by id_a;
+            </code></pre>
+
+            <img src="images/duckdb-matched-random-numbers.png" alt="Snapshot of DuckDB results showing sample rows matched on ID with random numbers now matching due to use of a temporary table." class="responsive" width="80%"></a>
+
+            <h2>Conclusion</h2>
+            <p>I haven't tried this in any other databases, but it seems likely that others would act similarly. It's probably best to assume that if you need to reference a CTE multiple times and it has something non-deterministic in it, you should opt for a temporary table instead.</p>
 
         <!-- Footer -->
         <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/footer.js"></script>
