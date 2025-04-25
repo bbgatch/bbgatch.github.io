@@ -9,9 +9,11 @@
 
     <body>
         <h1>CTEs Can Be Evaluated Each Time They are Referenced</h1>
-            <p><i>2025-04-22</i></p>
+            <p><i>2025-04-24</i></p>
             
-            <p>Recently I ran into an interesting challenge in SQL when working in BigQuery that I was not previously aware of. I was generating a random number in a CTE (common table expression) and I then referenced that CTE multiple times later in the query. I realized that the random number in one CTE reference wasn't matching the random number in the other CTE reference.</p>
+            <p>Recently I ran into an interesting challenge in SQL when working in BigQuery that I was not previously aware of. I was generating a random number in a single CTE (common table expression) and I then referenced that CTE multiple times later in the query.</p>
+            
+            <p>I realized that the random number in one CTE reference wasn't matching what should have been the same random number in the other CTE reference. You would think that these random numbers would be generated a single time when this CTE was created. Then, referencing them multiple times later would produce consistent random numbers between references.</p>
 
             <pre><code class="language-sql">
                 with sample_data as (
@@ -31,7 +33,7 @@
                 order by id_a;
             </code></pre>
 
-            <p>After some digging, it turns out that CTEs can be evaluated each time they are referenced. So each time I was referencing the CTE, it was regenerating new random numbers, and I wouldn't be able to successfully join the CTE to itself using the same random number.</p>
+            <p>After some digging, it turns out that CTEs can be evaluated each time they are referenced. So each time I was referencing the CTE, it was reevaluating the CTE and regenerating new random numbers.</p>
 
             Here is how Google explains it in their <a href="https://cloud.google.com/bigquery/docs/best-practices-performance-compute#avoid_multiple_evaluations_of_the_same_ctes">documentation</a>:
             <a href="https://cloud.google.com/bigquery/docs/best-practices-performance-compute#avoid_multiple_evaluations_of_the_same_ctes"><img src="images/google-bigquery-cte-documentation.png" alt="Snapshot of Google BigQuery documentation on avoiding multiple evaluations of the same CTEs." class="responsive" width="80%"></a>
@@ -107,7 +109,7 @@
 
             <img src="images/duckdb-mismatched-random-numbers.png" alt="Snapshot of Google BigQuery results showing sample rows matched on ID but with different random numbers generated in the same CTE." class="responsive" width="80%"></a>
 
-            <p>Similar to BigQuery, we can just use a temporary table in DuckDB to solve the issue.</p>
+            <p>Similar to BigQuery, in DuckDB we can just use a temporary table to solve the issue.</p>
 
             <pre><code class="language-sql">
                 create or replace temporary table sample_data as (
@@ -130,7 +132,7 @@
             <img src="images/duckdb-matched-random-numbers.png" alt="Snapshot of DuckDB results showing sample rows matched on ID with random numbers now matching due to use of a temporary table." class="responsive" width="80%"></a>
 
             <h2>Conclusion</h2>
-            <p>I haven't tried this in any other databases, but it seems likely that others would act similarly. It's probably best to assume that if you need to reference a CTE multiple times and it has something non-deterministic in it, you should opt for a temporary table instead.</p>
+            <p>I haven't tried this in any other databases, but it seems likely that others would act similarly. It's probably best to assume that if you need to reference a CTE multiple times and it contains something non-deterministic, you should opt for a temporary table instead.</p>
 
         <!-- Footer -->
         <script language="javascript" type="text/javascript" src="https://www.bbgatch.com/footer.js"></script>
